@@ -19,7 +19,69 @@ vercel login
 
 ---
 
+## ⚡ 全局命令（最快速）
+
+如果你已经配置了全局部署工具，可以在**任何目录**使用以下命令：
+
+### 一键部署命令
+
+```bash
+# 基本用法：仅部署
+deploy <项目名>
+deploy my-website
+
+# 完整用法：部署并绑定域名
+deploy <项目名> <域名>
+deploy my-website example.com
+deploy ct ct.itccc.app
+
+# 完整命令名（与 deploy 相同）
+deploy-static my-website subdomain.itccc.app
+```
+
+### 辅助命令
+
+```bash
+# 初始化配置文件（创建 .gitignore 和 vercel.json）
+di
+# 或
+deployment-init
+
+# 查看完整部署指南
+dg
+# 或
+deployment-guide
+
+# 复制部署脚本到当前目录
+deployment-copy
+```
+
+### 使用示例
+
+```bash
+# 1. 进入项目目录
+cd ~/my-new-project
+
+# 2. 确保有 index.html
+ls index.html
+
+# 3. 一键部署（自动完成所有步骤）
+deploy my-project mysite.com
+
+# 完成！自动完成：
+# ✓ Git 初始化
+# ✓ 创建配置文件
+# ✓ 提交代码
+# ✓ 创建 GitHub 仓库
+# ✓ 部署到 Vercel
+# ✓ 绑定域名
+```
+
+---
+
 ## 🚀 标准部署流程（5步完成）
+
+> 如果你没有配置全局命令，或想手动执行每一步，请按以下流程操作：
 
 ### 第1步：检查并初始化 Git 仓库
 
@@ -285,6 +347,7 @@ vercel --prod --force
 | 手动逐步操作 | ~5-10分钟 | 需要多次命令和检查 |
 | 使用本指南 | ~2分钟 | 按步骤执行命令 |
 | 使用一键脚本 | ~30秒 | 修改变量后一键完成 |
+| **使用全局命令** | **~20秒** | **最快速：`deploy my-project example.com`** |
 
 ---
 
@@ -321,6 +384,134 @@ vercel --prod --force
 - [GitHub CLI 文档](https://cli.github.com/manual/)
 - [Vercel CLI 文档](https://vercel.com/docs/cli)
 - [Git 基础教程](https://git-scm.com/book/zh/v2)
+
+---
+
+## 🔧 配置全局部署工具
+
+如果你想在**任何目录**都能使用 `deploy` 命令，可以配置全局部署工具：
+
+### 自动配置（推荐）
+
+将部署脚本和配置添加到你的 shell 配置文件中：
+
+```bash
+# 1. 创建模板目录
+mkdir -p ~/.deployment-templates
+
+# 2. 复制部署脚本（从现有项目复制）
+cp deploy-static.sh ~/.deployment-templates/
+cp DEPLOYMENT.md ~/.deployment-templates/
+
+# 3. 添加到 shell 配置（~/.zshrc 或 ~/.bashrc）
+cat >> ~/.zshrc << 'EOF'
+
+# =====================================================
+# 静态网站部署工具
+# =====================================================
+
+# 快速部署静态网站到 GitHub + Vercel
+deploy-static() {
+    bash ~/.deployment-templates/deploy-static.sh "$@"
+}
+
+# 查看部署指南
+deployment-guide() {
+    if command -v bat &> /dev/null; then
+        bat ~/.deployment-templates/DEPLOYMENT.md
+    elif command -v less &> /dev/null; then
+        less ~/.deployment-templates/DEPLOYMENT.md
+    else
+        cat ~/.deployment-templates/DEPLOYMENT.md
+    fi
+}
+
+# 复制部署脚本到当前目录
+deployment-copy() {
+    cp ~/.deployment-templates/deploy-static.sh ./deploy.sh
+    chmod +x ./deploy.sh
+    echo "✓ 部署脚本已复制到当前目录: ./deploy.sh"
+}
+
+# 快速初始化部署配置文件
+deployment-init() {
+    echo "📝 创建部署配置文件..."
+
+    # 创建 .gitignore
+    if [ ! -f .gitignore ]; then
+        cat > .gitignore << 'INNER_EOF'
+.vercel
+.DS_Store
+node_modules/
+INNER_EOF
+        echo "✓ .gitignore 创建完成"
+    else
+        echo "→ .gitignore 已存在，跳过"
+    fi
+
+    # 创建 vercel.json
+    if [ ! -f vercel.json ]; then
+        cat > vercel.json << 'INNER_EOF'
+{
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}
+INNER_EOF
+        echo "✓ vercel.json 创建完成"
+    else
+        echo "→ vercel.json 已存在，跳过"
+    fi
+
+    echo ""
+    echo "✅ 配置文件初始化完成！"
+}
+
+# 别名
+alias deploy='deploy-static'
+alias dg='deployment-guide'
+alias di='deployment-init'
+EOF
+
+# 4. 重新加载配置
+source ~/.zshrc
+```
+
+### 验证安装
+
+```bash
+# 检查命令是否可用
+type deploy
+type dg
+type di
+
+# 查看帮助
+deploy --help
+
+# 查看部署指南
+dg
+```
+
+### 使用全局命令
+
+配置完成后，在任何目录都可以使用：
+
+```bash
+# 进入任何项目
+cd ~/any/project
+
+# 一键部署
+deploy my-project example.com
+
+# 初始化配置
+di
+
+# 查看指南
+dg
+```
 
 ---
 
