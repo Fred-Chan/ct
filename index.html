@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>计算思维网页小游戏导航</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666;
+            --card-bg: #ffffff;
+            --shadow-sm: 0 4px 6px rgba(0,0,0,0.05);
+            --shadow-md: 0 10px 15px rgba(0,0,0,0.1);
+            --shadow-lg: 0 20px 25px rgba(0,0,0,0.15);
+            --radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            background-image: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 4rem 1rem 2rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Main Grid */
+        main {
+            flex: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 100%;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            padding: 1rem;
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+            color: inherit;
+            position: relative;
+            top: 0;
+            opacity: 0;
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-preview {
+            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-preview::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.1) 100%);
+        }
+
+        .card-content {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        .card-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            flex: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background-color: #f0f2f5;
+            color: var(--text-primary);
+            text-align: center;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .card:hover .btn {
+            background-color: #1a1a1a;
+            color: white;
+        }
+
+        /* Gradients */
+        .bg-blue { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .bg-green { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .bg-orange { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .bg-purple { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .bg-red { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%); }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: auto;
+        }
+
+        footer a {
+            color: inherit;
+            text-decoration: none;
+            border-bottom: 1px dotted currentColor;
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            .grid { grid-template-columns: 1fr; padding: 0.5rem; }
+            main { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>计算思维网页小游戏导航</h1>
+        <p class="subtitle">通过互动游戏探索计算机科学的核心概念，寓教于乐，开启智慧之旅。</p>
+    </header>
+
+    <main>
+        <div class="grid">
+            <!-- Binary Converter -->
+            <a href="https://binary-converter-game.itccc.app/" target="_blank" rel="noopener noreferrer" class="card" style="animation-delay: 0.1s;">
+                <div class="card-preview bg-blue">
+                    <span>01</span>
+                </div>
+                <div class="card-content">
+                    <h2 class="card-title">二进制加密解密游戏</h2>
+                    <p class="card-desc">探索二进制编码的奥秘！将文字转换为二进制代码，或将二进制解码为文字。还能将二进制转换为黑白图片，挑战解码游戏。</p>
+                    <div class="btn">开始游戏</div>
+                </div>
+            </a>
+
+            <!-- A* Algorithm -->
+            <a href="https://astar.itccc.app/" target="_blank" rel="noopener noreferrer" class="card" style="animation-delay: 0.2s;">
+                <div class="card-preview bg-green">
+                    <span>🌟</span>
+                </div>
+                <div class="card-content">
+                    <h2 class="card-title">寻路小达人 - A*算法</h2>
+                    <p class="card-desc">学习经典的A*寻路算法！通过可视化演示理解f=g+h*公式，观察算法如何智能地找到最短路径，掌握曼哈顿距离原理。</p>
+                    <div class="btn">开始游戏</div>
+                </div>
+            </a>
+
+            <!-- Binary Timer -->
+            <a href="https://erjinzhi.itccc.app/" target="_blank" rel="noopener noreferrer" class="card" style="animation-delay: 0.3s;">
+                <div class="card-preview bg-orange">
+                    <span>⏱️</span>
+                </div>
+                <div class="card-content">
+                    <h2 class="card-title">二进制定时器</h2>
+                    <p class="card-desc">用4个LED灯显示0-15小时！理解二进制如何用最少的灯表达最多的信息。每按一次按钮增加1小时，观察二进制计数的魔力。</p>
+                    <div class="btn">开始游戏</div>
+                </div>
+            </a>
+
+            <!-- Pigpen Cipher -->
+            <a href="https://zhujuanmima.itccc.app/" target="_blank" rel="noopener noreferrer" class="card" style="animation-delay: 0.4s;">
+                <div class="card-preview bg-purple">
+                    <span>🐷</span>
+                </div>
+                <div class="card-content">
+                    <h2 class="card-title">猪圈密码多模式图解</h2>
+                    <p class="card-desc">探索经典的猪圈密码（Pigpen Cipher）！学习如何用符号替换字母进行加密，支持多种加密模式，包含实时翻译器功能。</p>
+                    <div class="btn">开始游戏</div>
+                </div>
+            </a>
+
+            <!-- Vigenere Cipher -->
+            <a href="https://fujiniyamima.itccc.app/" target="_blank" rel="noopener noreferrer" class="card" style="animation-delay: 0.5s;">
+                <div class="card-preview bg-red">
+                    <span>🔐</span>
+                </div>
+                <div class="card-content">
+                    <h2 class="card-title">维吉尼亚密码演示</h2>
+                    <p class="card-desc">学习更高级的维吉尼亚密码！理解多表替换加密的原理，体验如何使用密钥进行加密和解密，提升密码学知识。</p>
+                    <div class="btn">开始游戏</div>
+                </div>
+            </a>
+        </div>
+    </main>
+
+    <footer>
+        <p>CopyRight®️ 2025 ITCCC</p>
+    </footer>
+
+    <script>
+        // Simple script to enhance interactivity if needed in future
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.card');
+            
+            // Add slight parallax effect to emojis on hover
+            cards.forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                    const preview = card.querySelector('.card-preview span');
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    
+                    const moveX = (x - centerX) / 20;
+                    const moveY = (y - centerY) / 20;
+                    
+                    preview.style.transform = `translate(${moveX}px, ${moveY}px)`;
+                });
+
+                card.addEventListener('mouseleave', () => {
+                    const preview = card.querySelector('.card-preview span');
+                    preview.style.transform = 'translate(0, 0)';
+                    preview.style.transition = 'transform 0.3s ease';
+                });
+                
+                card.addEventListener('mouseenter', () => {
+                    const preview = card.querySelector('.card-preview span');
+                    preview.style.transition = 'none';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
