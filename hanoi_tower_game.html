@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉诺塔演示 - 递归算法可视化</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1400px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .intro {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        .intro h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .intro p {
+            color: #555;
+            line-height: 1.8;
+            margin: 8px 0;
+        }
+
+        .game-section {
+            display: none;
+        }
+
+        .game-section.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .difficulty-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .difficulty-btn {
+            background: white;
+            border: 3px solid #667eea;
+            padding: 30px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .difficulty-btn:hover {
+            background: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .difficulty-btn h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.5em;
+        }
+
+        .difficulty-btn:hover h3 {
+            color: white;
+        }
+
+        .difficulty-btn p {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .difficulty-btn:hover p {
+            color: white;
+        }
+
+        .difficulty-btn .moves {
+            color: #ff9800;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        /* 游戏区域 */
+        .game-area {
+            background: #f9f9f9;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+
+        .towers-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            height: 350px;
+            margin: 40px 0;
+            position: relative;
+        }
+
+        .tower {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            width: 250px;
+        }
+
+        .tower-pole {
+            position: absolute;
+            bottom: 0;
+            width: 12px;
+            height: 300px;
+            background: linear-gradient(90deg, #8B4513 0%, #A0522D 50%, #8B4513 100%);
+            border-radius: 6px 6px 0 0;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .tower-base {
+            position: absolute;
+            bottom: -20px;
+            width: 200px;
+            height: 20px;
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+            border-radius: 5px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .tower-label {
+            position: absolute;
+            bottom: -50px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .disk-container {
+            position: absolute;
+            bottom: 0;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            width: 100%;
+            z-index: 10;
+        }
+
+        .disk {
+            height: 30px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+            transition: all 0.5s ease-in-out;
+            position: relative;
+            margin-bottom: 2px;
+        }
+
+        .disk:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .disk.selected {
+            animation: bounce 0.5s ease-in-out infinite;
+            box-shadow: 0 8px 16px rgba(255, 152, 0, 0.6);
+        }
+
+        .disk.moving {
+            animation: moveHighlight 0.5s ease-in-out;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        @keyframes moveHighlight {
+            0% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7); }
+            50% { box-shadow: 0 0 20px 10px rgba(255, 152, 0, 0.3); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
+        }
+
+        .disk-1 { width: 60px; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); }
+        .disk-2 { width: 90px; background: linear-gradient(135deg, #feca57 0%, #ff9f43 100%); }
+        .disk-3 { width: 120px; background: linear-gradient(135deg, #48dbfb 0%, #0abde3 100%); }
+        .disk-4 { width: 150px; background: linear-gradient(135deg, #ff9ff3 0%, #f368e0 100%); }
+        .disk-5 { width: 180px; background: linear-gradient(135deg, #54a0ff 0%, #2e86de 100%); }
+
+        /* 错误提示 */
+        .error-message {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            color: #c62828;
+            display: none;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* 移动记录 */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+        }
+
+        .stat-box .number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-box .label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        /* 步骤显示 */
+        .step-display {
+            text-align: center;
+            font-size: 1.3em;
+            color: #764ba2;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 10px;
+        }
+
+        /* 操作说明 */
+        .instructions {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #ffc107;
+        }
+
+        .instructions h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .instructions p {
+            color: #856404;
+            margin: 5px 0;
+        }
+
+        /* 按钮 */
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            margin: 5px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        /* 移动记录 */
+        .move-log {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .move-log h3 {
+            color: #1565c0;
+            margin-bottom: 10px;
+        }
+
+        .log-item {
+            background: white;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-left: 3px solid #2196f3;
+            font-size: 0.9em;
+        }
+
+        /* 速度控制 */
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            margin: 15px 0;
+        }
+
+        .speed-control label {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        /* 完成界面 */
+        .result {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            margin: 20px 0;
+            color: white;
+        }
+
+        .result h2 {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .algorithm-info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .algorithm-info h3 {
+            color: #1565c0;
+            margin-bottom: 10px;
+        }
+
+        .algorithm-info p {
+            color: #424242;
+            line-height: 1.6;
+            margin: 8px 0;
+        }
+
+        .algorithm-info code {
+            background: #fff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #e91e63;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .difficulty-selector {
+                grid-template-columns: 1fr;
+            }
+
+            .towers-container {
+                height: 280px;
+            }
+
+            .tower-pole {
+                height: 230px;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗼 汉诺塔演示 - 递归算法可视化</h1>
+
+        <!-- 开始界面 -->
+        <div id="startScreen" class="game-section active">
+            <div class="intro">
+                <h3>🎮 游戏规则</h3>
+                <p><strong>目标：</strong>将所有圆盘从起始柱（A）移动到目标柱（C）</p>
+                <p><strong>规则：</strong></p>
+                <p>1️⃣ 每次只能移动一个圆盘</p>
+                <p>2️⃣ 大圆盘不能放在小圆盘上面</p>
+                <p>3️⃣ 可以借助辅助柱（B）中转</p>
+            </div>
+
+            <div class="intro">
+                <h3>💡 游戏奥秘</h3>
+                <p><strong>汉诺塔是一个古老的数学游戏：</strong></p>
+                <p>• 圆盘数量越多,需要的步数就越多</p>
+                <p>• 3个圆盘需要 7 步,4个圆盘需要 15 步</p>
+                <p>• 圆盘每增加1个,最少步数大约翻倍！</p>
+                <p>• 这是一个经典的数学思维训练游戏</p>
+            </div>
+
+            <p style="text-align: center; font-size: 1.2em; color: #667eea; font-weight: bold; margin: 20px 0;">
+                选择圆盘数量：
+            </p>
+
+            <div class="difficulty-selector">
+                <div class="difficulty-btn" onclick="startGame(3)">
+                    <h3>😊 简单</h3>
+                    <p>3个圆盘</p>
+                    <p class="moves">最少 7 步</p>
+                    <p><small>快速体验</small></p>
+                </div>
+
+                <div class="difficulty-btn" onclick="startGame(4)">
+                    <h3>🤔 中等</h3>
+                    <p>4个圆盘</p>
+                    <p class="moves">最少 15 步</p>
+                    <p><small>观察规律</small></p>
+                </div>
+
+                <div class="difficulty-btn" onclick="startGame(5)">
+                    <h3>😰 困难</h3>
+                    <p>5个圆盘</p>
+                    <p class="moves">最少 31 步</p>
+                    <p><small>感受威力</small></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 游戏界面 -->
+        <div id="gameScreen" class="game-section">
+            <div class="step-display" id="stepDisplay">
+                选择模式：手动尝试或自动演示
+            </div>
+
+            <!-- 错误提示 -->
+            <div class="error-message" id="errorMessage"></div>
+
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="number" id="currentMove">0</div>
+                    <div class="label">当前步数</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="totalDisks">3</div>
+                    <div class="label">圆盘数量</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="minimumMoves">7</div>
+                    <div class="label">理论最少步数</div>
+                </div>
+            </div>
+
+            <div class="game-area">
+                <div class="towers-container">
+                    <!-- 塔 A -->
+                    <div class="tower" id="towerA">
+                        <div class="tower-pole"></div>
+                        <div class="tower-base"></div>
+                        <div class="disk-container" id="containerA"></div>
+                        <div class="tower-label">起始柱 A</div>
+                    </div>
+
+                    <!-- 塔 B -->
+                    <div class="tower" id="towerB">
+                        <div class="tower-pole"></div>
+                        <div class="tower-base"></div>
+                        <div class="disk-container" id="containerB"></div>
+                        <div class="tower-label">辅助柱 B</div>
+                    </div>
+
+                    <!-- 塔 C -->
+                    <div class="tower" id="towerC">
+                        <div class="tower-pole"></div>
+                        <div class="tower-base"></div>
+                        <div class="disk-container" id="containerC"></div>
+                        <div class="tower-label">目标柱 C</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="instructions">
+                <h3>📋 操作指南：</h3>
+                <p><strong>手动模式：</strong>点击一个塔柱选择最上面的圆盘，再点击另一个塔柱移动圆盘</p>
+                <p><strong>自动模式：</strong>点击"自动演示"观看算法求解过程</p>
+            </div>
+
+            <div class="controls">
+                <button onclick="autoSolve()">🤖 自动演示（递归）</button>
+                <button onclick="resetGame()">重新开始 🔄</button>
+                <button onclick="backToMenu()">返回菜单 🏠</button>
+            </div>
+
+            <div class="speed-control" id="speedControl" style="display: none;">
+                <label>动画速度：</label>
+                <input type="range" id="speedSlider" min="300" max="2000" value="800" step="100">
+                <span id="speedValue">800ms</span>
+            </div>
+
+            <div class="move-log">
+                <h3>📝 移动记录：</h3>
+                <div id="moveLogList"></div>
+            </div>
+        </div>
+
+        <!-- 完成界面 -->
+        <div id="resultScreen" class="game-section">
+            <div class="result">
+                <h2>🎉 恭喜完成！</h2>
+                <p>您成功将所有圆盘移动到了目标柱！</p>
+                <p>总步数：<strong id="finalMoves">0</strong></p>
+                <p>理论最少步数：<strong id="finalMinimumMoves">0</strong></p>
+                <p id="performanceText"></p>
+            </div>
+
+            <div class="algorithm-info">
+                <h3>🔍 汉诺塔原理</h3>
+                <p><strong>游戏规则：</strong></p>
+                <p>1. 每次只能移动一个圆盘</p>
+                <p>2. 大圆盘不能放在小圆盘上面</p>
+                <p>3. 可以借助辅助柱移动圆盘</p>
+
+                <hr style="margin: 15px 0; border: none; border-top: 2px solid #ddd;">
+
+                <p><strong>步数规律：</strong></p>
+                <p>• 3个圆盘：最少 7 步</p>
+                <p>• 4个圆盘：最少 15 步</p>
+                <p>• 5个圆盘：最少 31 步</p>
+                <p>• 圆盘每增加1个,最少步数大约翻倍！</p>
+            </div>
+
+            <div class="controls">
+                <button onclick="resetGame()">再玩一次 🔄</button>
+                <button onclick="backToMenu()">返回菜单 🏠</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态
+        let diskCount = 3;
+        let towers = { A: [], B: [], C: [] };
+        let selectedTower = null;
+        let moveCount = 0;
+        let isAnimating = false;
+        let animationSpeed = 800;
+        let moveLog = [];
+
+        // 开始游戏
+        function startGame(disks) {
+            diskCount = disks;
+            towers = { A: [], B: [], C: [] };
+            selectedTower = null;
+            moveCount = 0;
+            moveLog = [];
+            isAnimating = false;
+
+            // 初始化塔A，将圆盘从大到小放入（大的在下面）
+            for (let i = diskCount; i >= 1; i--) {
+                towers.A.push(i);
+            }
+
+            showScreen('gameScreen');
+            renderTowers();
+            updateStats();
+            updateStepDisplay('选择模式：手动尝试或点击"自动演示"观看递归过程');
+            clearMoveLog();
+            hideError();
+            document.getElementById('speedControl').style.display = 'none';
+        }
+
+        // 渲染塔
+        function renderTowers() {
+            ['A', 'B', 'C'].forEach(towerId => {
+                const container = document.getElementById(`container${towerId}`);
+                container.innerHTML = '';
+
+                towers[towerId].forEach((diskSize, index) => {
+                    const disk = document.createElement('div');
+                    disk.className = `disk disk-${diskSize}`;
+                    disk.textContent = diskSize;
+
+                    // 如果是选中的塔中最上面的圆盘，添加选中样式
+                    if (selectedTower === towerId && index === towers[towerId].length - 1) {
+                        disk.classList.add('selected');
+                    }
+
+                    container.appendChild(disk);
+                });
+            });
+        }
+
+        // 处理塔点击
+        function handleTowerClick(towerId) {
+            if (isAnimating) {
+                showError('⚠️ 自动演示中，请等待演示完成或点击"重新开始"');
+                return;
+            }
+
+            if (selectedTower === null) {
+                // 选择源塔
+                if (towers[towerId].length === 0) {
+                    showError('❌ 这个柱子没有圆盘！请选择有圆盘的柱子');
+                    return;
+                }
+                selectedTower = towerId;
+                hideError();
+                renderTowers();
+                updateStepDisplay(`✅ 已选中柱 ${towerId} 的圆盘 ${towers[towerId][towers[towerId].length - 1]}，请点击目标柱`);
+            } else {
+                // 移动到目标塔
+                if (selectedTower === towerId) {
+                    // 点击同一个塔，取消选择
+                    selectedTower = null;
+                    renderTowers();
+                    updateStepDisplay('已取消选择，请重新选择源柱');
+                    return;
+                }
+
+                // 尝试移动
+                if (canMove(selectedTower, towerId)) {
+                    moveDisk(selectedTower, towerId);
+                } else {
+                    const diskFrom = towers[selectedTower][towers[selectedTower].length - 1];
+                    const diskTo = towers[towerId].length > 0 ? towers[towerId][towers[towerId].length - 1] : '空';
+                    showError(`❌ 无效移动！圆盘 ${diskFrom} 不能放在圆盘 ${diskTo} 上面（大圆盘不能放在小圆盘上）`);
+                }
+
+                selectedTower = null;
+                renderTowers();
+            }
+        }
+
+        // 检查是否可以移动
+        function canMove(from, to) {
+            if (towers[from].length === 0) return false;
+            if (towers[to].length === 0) return true;
+
+            const diskToMove = towers[from][towers[from].length - 1];
+            const topDisk = towers[to][towers[to].length - 1];
+
+            return diskToMove < topDisk;
+        }
+
+        // 移动圆盘
+        function moveDisk(from, to) {
+            const disk = towers[from].pop();
+            towers[to].push(disk);
+            moveCount++;
+
+            const logText = `第${moveCount}步：圆盘 ${disk} 从柱 ${from} 移到柱 ${to}`;
+            moveLog.push(logText);
+            addMoveLog(logText);
+
+            updateStats();
+            hideError();
+            updateStepDisplay(`✅ 圆盘 ${disk} 从柱 ${from} 移到柱 ${to}`);
+
+            // 检查是否完成
+            if (checkWin()) {
+                setTimeout(() => showResult(), 500);
+            }
+        }
+
+        // 显示错误
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+
+            // 3秒后自动隐藏
+            setTimeout(() => {
+                errorDiv.classList.remove('show');
+            }, 3000);
+        }
+
+        // 隐藏错误
+        function hideError() {
+            document.getElementById('errorMessage').classList.remove('show');
+        }
+
+        // 自动演示（递归算法）
+        async function autoSolve() {
+            if (isAnimating) return;
+
+            // 重置到初始状态
+            towers = { A: [], B: [], C: [] };
+            for (let i = diskCount; i >= 1; i--) {
+                towers.A.push(i);
+            }
+            moveCount = 0;
+            moveLog = [];
+            clearMoveLog();
+            hideError();
+
+            isAnimating = true;
+            selectedTower = null;
+            document.getElementById('speedControl').style.display = 'flex';
+
+            await hanoiRecursive(diskCount, 'A', 'C', 'B');
+
+            isAnimating = false;
+            document.getElementById('speedControl').style.display = 'none';
+
+            if (checkWin()) {
+                setTimeout(() => showResult(), 500);
+            }
+        }
+
+        // 汉诺塔递归解法
+        async function hanoiRecursive(n, from, to, aux) {
+            if (n === 1) {
+                await autoMove(from, to);
+                return;
+            }
+
+            // 递归：将n-1个圆盘从from移到aux
+            await hanoiRecursive(n - 1, from, aux, to);
+
+            // 移动最大的圆盘
+            await autoMove(from, to);
+
+            // 递归：将n-1个圆盘从aux移到to
+            await hanoiRecursive(n - 1, aux, to, from);
+        }
+
+        // 自动移动
+        async function autoMove(from, to) {
+            const disk = towers[from][towers[from].length - 1];
+
+            updateStepDisplay(`🤖 移动圆盘 ${disk}：柱 ${from} → 柱 ${to}`);
+
+            // 高亮源塔
+            const sourceContainer = document.getElementById(`container${from}`);
+            const topDisk = sourceContainer.lastElementChild;
+            if (topDisk) {
+                topDisk.classList.add('selected');
+            }
+
+            await sleep(animationSpeed);
+
+            // 执行移动
+            towers[from].pop();
+            towers[to].push(disk);
+            moveCount++;
+
+            const logText = `第${moveCount}步：圆盘 ${disk} 从柱 ${from} 移到柱 ${to}`;
+            moveLog.push(logText);
+            addMoveLog(logText);
+
+            renderTowers();
+            updateStats();
+
+            await sleep(animationSpeed / 2);
+        }
+
+        // 检查是否获胜
+        function checkWin() {
+            return towers.C.length === diskCount;
+        }
+
+        // 更新统计
+        function updateStats() {
+            document.getElementById('currentMove').textContent = moveCount;
+            document.getElementById('totalDisks').textContent = diskCount;
+            document.getElementById('minimumMoves').textContent = Math.pow(2, diskCount) - 1;
+        }
+
+        // 更新步骤显示
+        function updateStepDisplay(text) {
+            document.getElementById('stepDisplay').textContent = text;
+        }
+
+        // 添加移动日志
+        function addMoveLog(text) {
+            const list = document.getElementById('moveLogList');
+            const item = document.createElement('div');
+            item.className = 'log-item';
+            item.textContent = text;
+            list.insertBefore(item, list.firstChild);
+
+            // 保持最多显示20条记录
+            while (list.children.length > 20) {
+                list.removeChild(list.lastChild);
+            }
+        }
+
+        // 清空移动日志
+        function clearMoveLog() {
+            document.getElementById('moveLogList').innerHTML = '';
+        }
+
+        // 显示结果
+        function showResult() {
+            showScreen('resultScreen');
+
+            const minMoves = Math.pow(2, diskCount) - 1;
+            document.getElementById('finalMoves').textContent = moveCount;
+            document.getElementById('finalMinimumMoves').textContent = minMoves;
+
+            const performance = document.getElementById('performanceText');
+            if (moveCount === minMoves) {
+                performance.innerHTML = '🌟 <strong>完美！</strong>您用最少的步数完成了挑战！';
+                performance.style.color = '#4caf50';
+            } else {
+                performance.innerHTML = `⚠️ 您用了 ${moveCount - minMoves} 步超出最少步数，继续加油！`;
+                performance.style.color = '#ff9800';
+            }
+        }
+
+        // 重置游戏
+        function resetGame() {
+            startGame(diskCount);
+        }
+
+        // 返回主菜单
+        function backToMenu() {
+            showScreen('startScreen');
+        }
+
+        // 显示指定屏幕
+        function showScreen(screenId) {
+            document.querySelectorAll('.game-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // 延时函数
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // 速度控制
+        document.getElementById('speedSlider').addEventListener('input', function(e) {
+            animationSpeed = parseInt(e.target.value);
+            document.getElementById('speedValue').textContent = animationSpeed + 'ms';
+        });
+
+        // 绑定塔的点击事件
+        document.getElementById('towerA').addEventListener('click', () => handleTowerClick('A'));
+        document.getElementById('towerB').addEventListener('click', () => handleTowerClick('B'));
+        document.getElementById('towerC').addEventListener('click', () => handleTowerClick('C'));
+    </script>
+</body>
+</html>

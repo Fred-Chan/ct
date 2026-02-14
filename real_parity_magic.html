@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>真正的魔术 - 校验码红白卡片</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            max-width: 1000px;
+            width: 100%;
+            padding: 40px;
+            position: relative;
+        }
+
+        h1 {
+            color: #302b63;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .intro {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 12px;
+        }
+
+        .intro h3 {
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .intro p {
+            line-height: 1.8;
+            margin: 8px 0;
+        }
+
+        .game-section {
+            display: none;
+        }
+
+        .game-section.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+            justify-items: center;
+        }
+
+        .card {
+            width: 100px;
+            height: 140px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            border-radius: 12px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+            color: white;
+            font-size: 2em;
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+            color: #333;
+            transform: rotateY(180deg);
+            border: 3px solid #ccc;
+            font-size: 2em;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 35px;
+            border-radius: 30px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result {
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 20px;
+            margin: 20px 0;
+            color: white;
+        }
+
+        .result h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .result p {
+            font-size: 1.4em;
+            margin: 15px 0;
+        }
+
+        .magic-number {
+            font-size: 4em;
+            font-weight: bold;
+            margin: 30px 0;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .explanation {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 25px;
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+
+        .explanation h3 {
+            color: #856404;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .explanation p {
+            color: #856404;
+            line-height: 1.8;
+            margin: 10px 0;
+            font-size: 1.1em;
+        }
+
+        .status {
+            text-align: center;
+            margin: 25px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            border-radius: 15px;
+            color: #302b63;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .round-indicator {
+            text-align: center;
+            font-size: 1.5em;
+            color: #302b63;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .magic-reveal {
+            animation: magicReveal 1s ease-out;
+        }
+
+        @keyframes magicReveal {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .step-highlight {
+            background: #fffacd;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #ffd700;
+        }
+
+        .binary-display {
+            font-family: 'Courier New', monospace;
+            background: #2c3e50;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+            font-size: 1.3em;
+            letter-spacing: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .card-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .card {
+                width: 80px;
+                height: 110px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎴 校验码魔术 - 真正的魔法</h1>
+
+        <!-- 开始界面 -->
+        <div id="startScreen" class="game-section active">
+            <div class="intro">
+                <h3>🎭 这是一个真正的魔术！</h3>
+                <p><strong>魔术规则：</strong></p>
+                <p>1️⃣ 计算机展示15张红白卡片（编号1-15）</p>
+                <p>2️⃣ 你在心中选一个数字，但<strong>不要告诉计算机</strong>！</p>
+                <p>3️⃣ 计算机会问你几张卡片是否包含你的数字</p>
+                <p>4️⃣ 最后，计算机会神奇地猜出你心中的数字！</p>
+                <p>5️⃣ <strong>关键：</strong>计算机从来不知道你点击了什么，只问你"有"或"没有"！</p>
+            </div>
+
+            <div class="intro" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                <h3>🔮 魔术原理提前看</h3>
+                <p><strong>这个魔术使用的是【二进制编码】（Binary Encoding）：</strong></p>
+                <p>• 每个数字都可以用0和1组成的二进制表示</p>
+                <p>• 4组卡片对应二进制的4个位数</p>
+                <p>• 通过你的"有/没有"回答，确定每一位是0还是1</p>
+                <p>• 最后将所有"有"的组的值相加，还原出你的数字！</p>
+            </div>
+
+            <div class="button-group">
+                <button onclick="startMagic()">开始魔术表演 🎭</button>
+            </div>
+        </div>
+
+        <!-- 游戏界面 -->
+        <div id="gameScreen" class="game-section">
+            <div class="round-indicator">
+                第 <span id="currentRound">1</span> / 4 轮
+            </div>
+
+            <div class="status" id="statusText">
+                正在展示第 1 组卡片...
+            </div>
+
+            <div class="step-highlight">
+                <p>👀 请仔细观察下面的卡片，这组卡片中是否包含你心中的数字？</p>
+            </div>
+
+            <div class="card-grid" id="cardGrid"></div>
+
+            <div class="button-group">
+                <button onclick="answer(true)" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                    ✅ 有我的数字
+                </button>
+                <button onclick="answer(false)" style="background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);">
+                    ❌ 没有我的数字
+                </button>
+            </div>
+
+            <div class="binary-display" id="calculationDisplay">
+                计算机正在记录你的回答...
+            </div>
+        </div>
+
+        <!-- 结果界面 -->
+        <div id="resultScreen" class="game-section">
+            <div class="result">
+                <h2>🎉 魔术时刻！</h2>
+                <p>计算机猜出了你心中的数字！</p>
+                <div class="magic-number magic-reveal" id="magicNumber">
+                    ?
+                </div>
+                <p>我猜对了吗？😊</p>
+            </div>
+
+            <div class="explanation">
+                <h3>🔍 魔术揭秘 - 二进制编码的魔法</h3>
+
+                <div class="step-highlight">
+                    <p><strong>你的回答记录：</strong></p>
+                    <p id="answerRecord">等待记录...</p>
+                </div>
+
+                <div class="step-highlight">
+                    <p><strong>计算过程：</strong></p>
+                    <p id="calculationProcess">等待计算...</p>
+                </div>
+
+                <hr style="margin: 20px 0; border: none; border-top: 3px solid #ddd;">
+
+                <p><strong>🎯 原理说明：</strong></p>
+                <p><strong>这个魔术使用的是【二进制编码】（Binary Encoding）：</strong></p>
+
+                <p>1️⃣ <strong>什么是二进制？</strong></p>
+                <p style="margin-left: 20px;">• 我们平时用的叫"十进制"（0-9，逢十进一）</p>
+                <p style="margin-left: 20px;">• 计算机用的是"二进制"（只有0和1，逢二进一）</p>
+                <p style="margin-left: 20px;">• 任何数字都可以用0和1的组合来表示！</p>
+
+                <p>2️⃣ <strong>4组卡片代表什么？</strong></p>
+                <p style="margin-left: 20px;">• 第1组：检查第1位（2⁰ = 1）</p>
+                <p style="margin-left: 20px;">• 第2组：检查第2位（2¹ = 2）</p>
+                <p style="margin-left: 20px;">• 第3组：检查第3位（2² = 4）</p>
+                <p style="margin-left: 20px;">• 第4组：检查第4位（2³ = 8）</p>
+
+                <p>3️⃣ <strong>你的回答告诉我们什么？</strong></p>
+                <p style="margin-left: 20px;">• 回答"有" → 这一位是1，加上对应的值</p>
+                <p style="margin-left: 20px;">• 回答"没有" → 这一位是0，加0</p>
+
+                <p>4️⃣ <strong>最终计算：</strong></p>
+                <p style="margin-left: 20px;">• 将所有"有"的组的值相加 = 你心中的数字！</p>
+
+                <hr style="margin: 20px 0; border: none; border-top: 3px solid #ddd;">
+
+                <p><strong>💡 什么是奇偶校验？（补充知识）</strong></p>
+                <p style="margin-left: 20px;">• 奇偶校验是另一种错误检测方法</p>
+                <p style="margin-left: 20px;">• 它统计1的个数是奇数还是偶数</p>
+                <p style="margin-left: 20px;">• <strong>但这个魔术用的是二进制编码，不是奇偶校验！</strong></p>
+
+                <hr style="margin: 20px 0; border: none; border-top: 3px solid #ddd;">
+
+                <p><strong>🌟 现实应用：</strong></p>
+                <p>• 计算机内存错误检测和纠正（使用汉明码，基于二进制）</p>
+                <p>• RAID磁盘阵列（数据分块存储）</p>
+                <p>• 通信协议的纠错机制</p>
+                <p>• 二维码和条形码</p>
+            </div>
+
+            <div class="button-group">
+                <button onclick="showDetailedExplanation()">🔍 查看详细解析</button>
+                <button onclick="restartMagic()">再玩一次 🔄</button>
+            </div>
+        </div>
+
+        <!-- 详细解析界面 -->
+        <div id="explanationScreen" class="game-section">
+            <div class="explanation">
+                <h2 style="text-align: center; color: #856404; margin-bottom: 30px;">📚 魔术完整解析 - 一步步揭秘</h2>
+
+                <div class="step-highlight">
+                    <h3 style="color: #d63031; margin-bottom: 15px;">第一步：理解二进制</h3>
+                    <p><strong>问题：</strong>为什么是4组卡片？</p>
+                    <p><strong>答案：</strong>因为 2⁴ = 16，可以表示 0-15 共16个数字！</p>
+                    <p>每一组卡片代表二进制的一个位数：</p>
+                    <ul style="margin-left: 30px; margin-top: 10px;">
+                        <li>第1组 → 第1位（2⁰ = 1）</li>
+                        <li>第2组 → 第2位（2¹ = 2）</li>
+                        <li>第3组 → 第3位（2² = 4）</li>
+                        <li>第4组 → 第4位（2³ = 8）</li>
+                    </ul>
+                </div>
+
+                <div id="stepByStepExplanation"></div>
+
+                <div class="step-highlight">
+                    <h3 style="color: #d63031; margin-bottom: 15px;">关键原理总结</h3>
+                    <p>🎯 <strong>核心思想：</strong>每个数字都能唯一表示为2的幂次之和</p>
+                    <p>📊 <strong>你的数字 <span id="userNumberDisplay">?</span> 的二进制：</span></p>
+                    <div class="binary-display" id="finalBinary" style="font-size: 1.5em; margin: 15px 0;"></div>
+                    <p>✨ <strong>这就是计算机的"读心术"！</strong></p>
+                </div>
+
+                <div class="step-highlight" style="background: #e8f5e9; border-left-color: #4caf50;">
+                    <h3 style="color: #2e7d32; margin-bottom: 15px;">🌟 现实应用举例</h3>
+                    <p><strong>1. 计算机内存（RAM）：</strong></p>
+                    <p style="margin-left: 20px;">• 每个内存字节都有校验位</p>
+                    <p style="margin-left: 20px;">• 如果某一位出错（0变1或1变0），校验码能检测并纠正</p>
+                    <p style="margin-left: 20px;">• 这就是为什么计算机很少出现内存错误！</p>
+
+                    <p style="margin-top: 15px;"><strong>2. 数据传输：</strong></p>
+                    <p style="margin-left: 20px;">• 网络传输数据时，每个数据包都有校验码</p>
+                    <p style="margin-left: 20px;">• 接收方通过校验码判断数据是否正确</p>
+                    <p style="margin-left: 20px;">• 如果有错误，可以要求重新发送或自动纠正</p>
+
+                    <p style="margin-top: 15px;"><strong>3. 二维码和条形码：</strong></p>
+                    <p style="margin-left: 20px;">• 即使二维码部分脏污或遮挡</p>
+                    <p style="margin-left: 20px;">• 校验码算法可以恢复原始信息</p>
+                    <p style="margin-left: 20px;">• 这就是纠错码的神奇之处！</p>
+                </div>
+
+                <div class="step-highlight" style="background: #fff3e0; border-left-color: #ff9800;">
+                    <h3 style="color: #e65100; margin-bottom: 15px;">🧪 拓展学习</h3>
+                    <p>看看其他数字的二进制表示（按数值从小到大排列）：</p>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                        <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                            <strong>数字 1</strong><br>
+                            <code style="color: #667eea; font-size: 1.2em;">0001</code><br>
+                            <small>2⁰ = 1</small>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                            <strong>数字 5</strong><br>
+                            <code style="color: #667eea; font-size: 1.2em;">0101</code><br>
+                            <small>2⁰ + 2² = 1 + 4</small>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                            <strong>数字 7</strong><br>
+                            <code style="color: #667eea; font-size: 1.2em;">0111</code><br>
+                            <small>2⁰ + 2¹ + 2² = 1 + 2 + 4</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button onclick="showResultScreen()">← 返回结果</button>
+                    <button onclick="restartMagic()">再玩一次 🔄</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 动画步骤计数器
+        let animationStep = 0;
+        let animationTimer = null;
+        // 魔术卡片数据 - 基于二进制编码
+        // 第1组：第0位为1的数字（二进制的第1位是1）
+        const magicCards = [
+            // 第1组：第0位为1的数字（1, 3, 5, 7, 9, 11, 13, 15）
+            [1, 3, 5, 7, 9, 11, 13, 15],
+
+            // 第2组：第1位为1的数字（2, 3, 6, 7, 10, 11, 14, 15）
+            [2, 3, 6, 7, 10, 11, 14, 15],
+
+            // 第3组：第2位为1的数字（4, 5, 6, 7, 12, 13, 14, 15）
+            [4, 5, 6, 7, 12, 13, 14, 15],
+
+            // 第4组：第3位为1的数字（8, 9, 10, 11, 12, 13, 14, 15）
+            [8, 9, 10, 11, 12, 13, 14, 15]
+        ];
+
+        // 游戏状态
+        let currentRound = 0;
+        let userAnswers = [];
+        let guessedNumber = 0;
+
+        // 开始魔术
+        function startMagic() {
+            currentRound = 0;
+            userAnswers = [];
+            guessedNumber = 0;
+
+            showScreen('gameScreen');
+            showRound();
+        }
+
+        // 显示当前轮次
+        function showRound() {
+            const cards = magicCards[currentRound];
+            const grid = document.getElementById('cardGrid');
+
+            grid.innerHTML = '';
+            document.getElementById('currentRound').textContent = currentRound + 1;
+            document.getElementById('statusText').textContent = `第 ${currentRound + 1} 组卡片：这组中是否包含你心中的数字？`;
+
+            cards.forEach(num => {
+                const card = document.createElement('div');
+                card.className = 'card';
+
+                const cardInner = document.createElement('div');
+                cardInner.className = 'card-inner';
+
+                const cardFront = document.createElement('div');
+                cardFront.className = 'card-front';
+                cardFront.textContent = num;
+
+                const cardBack = document.createElement('div');
+                cardBack.className = 'card-back';
+                cardBack.textContent = num;
+
+                cardInner.appendChild(cardFront);
+                cardInner.appendChild(cardBack);
+                card.appendChild(cardInner);
+                grid.appendChild(card);
+            });
+
+            updateCalculationDisplay();
+        }
+
+        // 更新计算显示
+        function updateCalculationDisplay() {
+            let display = '当前计算状态：';
+
+            if (userAnswers.length > 0) {
+                const calculations = userAnswers.map((answer, index) => {
+                    const groupNum = Math.pow(2, index);
+                    return answer ? `第${index + 1}组(值${groupNum}):✅` : `第${index + 1}组(值${groupNum}):❌`;
+                });
+                display += calculations.join(' | ');
+            } else {
+                display += '等待你的回答...';
+            }
+
+            document.getElementById('calculationDisplay').textContent = display;
+        }
+
+        // 用户回答
+        function answer(hasNumber) {
+            userAnswers.push(hasNumber);
+            currentRound++;
+
+            if (currentRound >= magicCards.length) {
+                calculateResult();
+            } else {
+                showRound();
+            }
+        }
+
+        // 计算结果
+        function calculateResult() {
+            guessedNumber = 0;
+
+            userAnswers.forEach((answer, index) => {
+                if (answer) {
+                    guessedNumber += Math.pow(2, index);
+                }
+            });
+
+            // 更新结果界面
+            document.getElementById('magicNumber').textContent = guessedNumber;
+
+            const answerRecord = userAnswers.map((answer, index) => {
+                return `第${index + 1}组（值${Math.pow(2, index)}）：${answer ? '✅ 有' : '❌ 没有'}`;
+            }).join('<br>');
+
+            document.getElementById('answerRecord').innerHTML = answerRecord;
+
+            const calculationProcess = userAnswers.map((answer, index) => {
+                const value = Math.pow(2, index);
+                return answer ? `+${value}` : '+0';
+            }).join(' ') + ` = ${guessedNumber}`;
+
+            document.getElementById('calculationProcess').textContent = calculationProcess;
+
+            showScreen('resultScreen');
+        }
+
+        // 重新开始
+        function restartMagic() {
+            showScreen('startScreen');
+        }
+
+        // 显示结果界面
+        function showResultScreen() {
+            showScreen('resultScreen');
+        }
+
+        // 显示详细解析
+        function showDetailedExplanation() {
+            showScreen('explanationScreen');
+
+            // 清除之前的动画
+            if (animationTimer) {
+                clearInterval(animationTimer);
+            }
+
+            // 生成逐步解析内容
+            generateStepByStepExplanation();
+
+            // 更新用户数字显示
+            document.getElementById('userNumberDisplay').textContent = guessedNumber;
+
+            // 显示最终二进制
+            document.getElementById('finalBinary').textContent =
+                guessedNumber.toString(2).padStart(4, '0') + ' (二进制) = ' + guessedNumber + ' (十进制)';
+        }
+
+        // 生成逐步解析
+        function generateStepByStepExplanation() {
+            const container = document.getElementById('stepByStepExplanation');
+            container.innerHTML = '';
+
+            let html = '<div class="step-highlight" style="background: #e3f2fd; border-left-color: #2196f3;">';
+            html += '<h3 style="color: #1565c0; margin-bottom: 15px;">第二步：你的回答记录分析</h3>';
+            html += '<p>计算机记录了你的每一次回答，并展示每组的二进制判断依据：</p>';
+
+            userAnswers.forEach((answer, index) => {
+                const groupValue = Math.pow(2, index);
+                const binaryPosition = index; // 二进制位置（0-3）
+                const status = answer ? '✅ 有' : '❌ 没有';
+                const color = answer ? '#4caf50' : '#f44336';
+
+                html += `<div style="margin: 15px 0; padding: 20px; background: white; border-radius: 8px; border-left: 4px solid ${color};">`;
+                html += `<p style="font-size: 1.2em; margin-bottom: 10px;"><strong>第${index + 1}组卡片（检查二进制第${binaryPosition}位，值 ${groupValue}）：</strong>${status}</p>`;
+
+                if (answer) {
+                    html += `<p style="color: #2e7d32; font-size: 1.1em;">→ 你回答"有"，说明你的数字的二进制第${binaryPosition}位是 <strong>1</strong></p>`;
+                    html += `<p style="color: #2e7d32; font-size: 1.1em;">→ 累加值：<strong>+${groupValue}</strong></p>`;
+                } else {
+                    html += `<p style="color: #c62828; font-size: 1.1em;">→ 你回答"没有"，说明你的数字的二进制第${binaryPosition}位是 <strong>0</strong></p>`;
+                    html += `<p style="color: #c62828; font-size: 1.1em;">→ 累加值：<strong>+0</strong></p>`;
+                }
+
+                html += `<div style="margin-top: 15px; padding: 15px; background: #f5f5f5; border-radius: 8px;">`;
+                html += `<p style="font-weight: bold; margin-bottom: 10px;">📊 这组的8个数字及其二进制（第${binaryPosition}位都是1）：</p>`;
+
+                // 创建一个表格展示这组的所有数字及其二进制
+                html += '<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px;">';
+
+                magicCards[index].forEach(num => {
+                    const binary = num.toString(2).padStart(4, '0');
+                    const targetBit = binary[3 - binaryPosition]; // 获取指定位
+                    const isTargetBitOne = targetBit === '1';
+
+                    html += `<div style="background: white; padding: 10px; border-radius: 5px; text-align: center; border: 2px solid ${isTargetBitOne ? '#4caf50' : '#ddd'};">`;
+                    html += `<div style="font-size: 1.5em; font-weight: bold; color: #667eea;">${num}</div>`;
+                    html += `<div style="font-family: monospace; font-size: 1.1em; margin-top: 5px; color: #666;">`;
+                    html += binary.split('').map((bit, bitIndex) => {
+                        const isTargetPosition = bitIndex === (3 - binaryPosition);
+                        const bgColor = isTargetPosition ? '#4caf50' : '#e0e0e0';
+                        const textColor = isTargetPosition ? 'white' : '#333';
+                        return `<span style="background: ${bgColor}; color: ${textColor}; padding: 2px 5px; border-radius: 3px; margin: 0 1px;">${bit}</span>`;
+                    }).join('');
+                    html += '</div>';
+                    html += `<div style="font-size: 0.8em; color: ${isTargetBitOne ? '#4caf50' : '#999'}; margin-top: 3px;">`;
+                    html += `第${binaryPosition}位=${targetBit}`;
+                    html += `</div>`;
+                    html += `</div>`;
+                });
+
+                html += '</div>';
+                html += `<p style="margin-top: 10px; font-size: 0.9em; color: #666;">`;
+                html += `💡 原理：这组的所有数字在二进制第${binaryPosition}位都是<strong>1</strong>（绿色高亮），所以如果你的数字在这组，说明它的第${binaryPosition}位也是1`;
+                html += `</p>`;
+                html += `</div>`;
+                html += `</div>`;
+            });
+
+            html += '</div>';
+
+            // 添加计算过程
+            html += '<div class="step-highlight" style="background: #f3e5f5; border-left-color: #9c27b0;">';
+            html += '<h3 style="color: #6a1b9a; margin-bottom: 15px;">第三步：计算机的计算过程</h3>';
+            html += '<p>现在让我们看看计算机是如何一步步计算出你的数字：</p>';
+
+            html += '<div style="background: white; padding: 20px; border-radius: 10px; margin: 15px 0;">';
+            html += '<p style="font-size: 1.2em; margin-bottom: 15px;"><strong>计算公式：</strong></p>';
+            html += '<p style="font-family: monospace; font-size: 1.3em; color: #667eea; margin: 10px 0;">';
+
+            let calculation = '';
+            let runningSum = 0;
+
+            userAnswers.forEach((answer, index) => {
+                const value = Math.pow(2, index);
+                if (answer) {
+                    calculation += `${value} + `;
+                    runningSum += value;
+                }
+            });
+
+            if (calculation === '') {
+                calculation = '0';
+            } else {
+                calculation = calculation.slice(0, -3); // 移除最后的 ' + '
+            }
+
+            html += `${calculation} = ${guessedNumber}`;
+            html += '</p>';
+            html += '</div>';
+
+            // 显示二进制转换过程
+            html += '<div style="background: white; padding: 20px; border-radius: 10px; margin: 15px 0;">';
+            html += '<p style="font-size: 1.2em; margin-bottom: 15px;"><strong>二进制表示过程：</strong></p>';
+
+            let binary = guessedNumber.toString(2).padStart(4, '0');
+            html += '<div style="font-family: monospace; font-size: 1.4em; letter-spacing: 8px; text-align: center; margin: 20px 0;">';
+
+            for (let i = 0; i < 4; i++) {
+                const bit = binary[3 - i]; // 从右到左
+                const bitValue = Math.pow(2, i);
+                const color = userAnswers[i] ? '#4caf50' : '#f44336';
+                const bgColor = userAnswers[i] ? '#e8f5e9' : '#ffebee';
+
+                html += `<span style="background: ${bgColor}; color: ${color}; padding: 10px 15px; border-radius: 5px; margin: 0 5px;">`;
+                html += `${bit}<sub style="font-size: 0.7em;">${bitValue}</sub>`;
+                html += `</span>`;
+            }
+
+            html += '</div>';
+            html += `<p style="text-align: center; margin-top: 15px; color: #666;">`;
+            html += `从右到左：第1位(1) 第2位(2) 第3位(4) 第4位(8)`;
+            html += `</p>`;
+            html += '</div>';
+
+            html += '</div>';
+
+            // 添加验算步骤
+            html += '<div class="step-highlight" style="background: #fff8e1; border-left-color: #ffc107;">';
+            html += '<h3 style="color: #f57c00; margin-bottom: 15px;">第四步：验算（验证结果）</h3>';
+            html += '<p>让我们验证一下计算结果是否正确：</p>';
+
+            html += '<div style="background: white; padding: 20px; border-radius: 10px; margin: 15px 0;">';
+            html += '<p style="font-size: 1.1em; margin-bottom: 10px;"><strong>问题：</strong>数字 ' + guessedNumber + ' 是否在第1组？</p>';
+            html += '<p>检查：' + guessedNumber + ' ÷ 2 的余数 = ' + (guessedNumber % 2) + ' （奇数）→ ' + (userAnswers[0] ? '✅ 在第1组' : '❌ 不在第1组') + '</p>';
+            html += '</div>';
+
+            html += '<div style="background: white; padding: 20px; border-radius: 10px; margin: 15px 0;">';
+            html += '<p style="font-size: 1.1em; margin-bottom: 10px;"><strong>问题：</strong>数字 ' + guessedNumber + ' 是否在第2组？</p>';
+            html += '<p>检查：(' + guessedNumber + ' ÷ 2) ÷ 2 的余数 = ' + (Math.floor(guessedNumber / 2) % 2) + ' → ' + (userAnswers[1] ? '✅ 在第2组' : '❌ 不在第2组') + '</p>';
+            html += '</div>';
+
+            html += '<div style="background: white; padding: 20px; border-radius: 10px; margin: 15px 0;">';
+            html += '<p style="font-size: 1.1em; margin-bottom: 10px;"><strong>问题：</strong>数字 ' + guessedNumber + ' 是否在第3组？</p>';
+            html += '<p>检查：(' + guessedNumber + ' ÷ 4) 的余数 ≥ 4 → ' + (guessedNumber % 8 >= 4 ? '✅ 在第3组' : '❌ 不在第3组') + '</p>';
+            html += '</div>';
+
+            html += '<div style="background: white; padding: 20px; border-radius: 10px; margin: 15px 0;">';
+            html += '<p style="font-size: 1.1em; margin-bottom: 10px;"><strong>问题：</strong>数字 ' + guessedNumber + ' 是否在第4组？</p>';
+            html += '<p>检查：' + guessedNumber + ' ≥ 8 → ' + (guessedNumber >= 8 ? '✅ 在第4组' : '❌ 不在第4组') + '</p>';
+            html += '</div>';
+
+            html += '<p style="text-align: center; font-size: 1.3em; color: #4caf50; font-weight: bold; margin-top: 20px;">';
+            html += '✅ 验算成功！所有检查都通过！';
+            html += '</p>';
+
+            html += '</div>';
+
+            container.innerHTML = html;
+        }
+
+        // 显示指定屏幕
+        function showScreen(screenId) {
+            document.querySelectorAll('.game-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // 获取上标数字
+        function getSuperscript(num) {
+            const superscripts = ['⁰', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹'];
+            return superscripts[num] || num;
+        }
+    </script>
+</body>
+</html>

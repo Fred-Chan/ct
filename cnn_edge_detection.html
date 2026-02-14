@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNN卷积边缘检测教学工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .control-panel {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        select, button {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        select:hover, button:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .panel h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            text-align: center;
+        }
+
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        canvas {
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .grid-info {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .grid-info h3 {
+            color: #555;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .kernel-display {
+            display: inline-block;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-left: 20px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .kernel-table {
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+
+        .kernel-table td {
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            border: 2px solid #667eea;
+            font-weight: bold;
+            font-size: 18px;
+            background: #f0f0f0;
+        }
+
+        .explanation {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+
+        .explanation h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .explanation p {
+            color: #856404;
+            line-height: 1.6;
+        }
+
+        .step-by-step {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .step-by-step h3 {
+            color: #555;
+            margin-bottom: 15px;
+        }
+
+        .calculation-step {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .calculation-step .step-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .formula {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+
+        .highlight {
+            background: #ffd700;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .math-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+
+        .mini-grid {
+            display: inline-grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            margin: 5px;
+        }
+
+        .mini-grid .cell {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #999;
+            background: #f5f5f5;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .mini-grid .cell.highlight-cell {
+            background: #ffd700;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border: 2px solid #333;
+            border-radius: 5px;
+        }
+
+        /* 动画演示相关样式 */
+        .animation-container {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .animation-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .animation-panel h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .canvas-with-overlay {
+            position: relative;
+            display: inline-block;
+        }
+
+        #kernelOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            border: 3px solid #ff6b6b;
+            background: rgba(255, 107, 107, 0.2);
+            border-radius: 5px;
+        }
+
+        .calculation-display {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 5px solid #667eea;
+        }
+
+        .calculation-display h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .calculation-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+
+        .calculation-grid {
+            display: inline-grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: #999;
+            border: 2px solid #667eea;
+        }
+
+        .calculation-grid .cell {
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .calculation-grid .cell.highlight {
+            background: #ffd700;
+        }
+
+        .arrow {
+            font-size: 24px;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .result-box {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .step-info {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .step-info p {
+            margin: 5px 0;
+            color: #856404;
+        }
+
+        .playback-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .playback-controls button {
+            min-width: 120px;
+        }
+
+        .playback-controls button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f0f0f0;
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+
+        #speedSlider {
+            width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 CNN卷积边缘检测教学工具</h1>
+        <p class="subtitle">通过互动体验理解卷积神经网络中的边缘检测原理</p>
+
+        <div class="control-panel">
+            <div class="control-group">
+                <label for="imageType">选择原始图片:</label>
+                <select id="imageType">
+                    <option value="square">正方形</option>
+                    <option value="rectangle">长方形</option>
+                    <option value="triangle">三角形</option>
+                    <option value="circle">圆形</option>
+                    <option value="cross">十字形</option>
+                    <option value="diagonal">对角线</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="kernelType">选择卷积核:</label>
+                <select id="kernelType">
+                    <option value="vertical">垂直边缘检测</option>
+                    <option value="horizontal">水平边缘检测</option>
+                    <option value="sobelX">Sobel X (垂直边缘)</option>
+                    <option value="sobelY">Sobel Y (水平边缘)</option>
+                    <option value="laplacian">Laplacian (全方向)</option>
+                </select>
+            </div>
+
+            <button onclick="runConvolution()">🚀 执行卷积运算</button>
+            <button onclick="startAnimation()">▶️ 演示卷积过程</button>
+            <button onclick="showStepByStep()">📝 查看详细步骤</button>
+            <button onclick="resetAll()">🔄 重置</button>
+        </div>
+
+        <div class="panel" id="animationPanel" style="display: none;">
+            <h2>🎬 卷积过程动画演示</h2>
+
+            <div class="playback-controls">
+                <button id="playBtn" onclick="togglePlay()">⏸️ 暂停</button>
+                <button id="prevBtn" onclick="previousStep()">⏮️ 上一步</button>
+                <button id="nextBtn" onclick="nextStep()">⏭️ 下一步</button>
+                <button onclick="resetAnimation()">🔄 重新开始</button>
+
+                <div class="speed-control">
+                    <label for="speedSlider">速度:</label>
+                    <input type="range" id="speedSlider" min="1" max="10" value="5" oninput="updateSpeed()">
+                    <span id="speedValue">5x</span>
+                </div>
+            </div>
+
+            <div class="animation-container">
+                <div class="animation-panel">
+                    <h3>输入图像 + 卷积核位置</h3>
+                    <div class="canvas-with-overlay">
+                        <canvas id="animationInputCanvas" width="330" height="330"></canvas>
+                        <div id="kernelOverlay"></div>
+                    </div>
+                    <p style="text-align: center; margin-top: 10px; color: #666;">
+                        当前位置: <span id="currentPos">[0, 0]</span> / <span id="totalPos">[63, 63]</span>
+                    </p>
+                </div>
+
+                <div class="animation-panel">
+                    <h3>输出特征图</h3>
+                    <canvas id="animationOutputCanvas" width="330" height="330"></canvas>
+                    <p style="text-align: center; margin-top: 10px; color: #666;">
+                        已计算: <span id="calculatedCount">0</span> / <span id="totalCount">64</span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="calculation-display">
+                <h4>📊 当前步骤计算详情</h4>
+                <div class="calculation-row">
+                    <div>输入区域值:</div>
+                    <div id="inputAreaGrid" class="calculation-grid"></div>
+                </div>
+                <div class="calculation-row">
+                    <div>×</div>
+                </div>
+                <div class="calculation-row">
+                    <div>卷积核:</div>
+                    <div id="kernelGrid" class="calculation-grid"></div>
+                </div>
+                <div class="calculation-row">
+                    <div>=</div>
+                </div>
+                <div class="calculation-row">
+                    <div class="result-box" id="calculationResult">0</div>
+                </div>
+
+                <div class="step-info">
+                    <p><strong>计算公式:</strong> <span id="calculationFormula"></span></p>
+                    <p><strong>说明:</strong> <span id="calculationExplanation"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="panel">
+                <h2>📸 原始图片 (输入矩阵)</h2>
+                <div class="canvas-container">
+                    <canvas id="inputCanvas" width="300" height="300"></canvas>
+                </div>
+                <div class="grid-info">
+                    <h3>图片说明</h3>
+                    <p id="imageDescription">这是一个简单的几何图形，用于演示边缘检测。白色区域值为255，黑色区域值为0。</p>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: white;"></div>
+                            <span>白色 (255)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: black;"></div>
+                            <span>黑色 (0)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>🎯 卷积核 (Kernel)</h2>
+                <div style="display: flex; align-items: flex-start; justify-content: center;">
+                    <div>
+                        <h3 style="color: #555; margin-bottom: 15px;" id="kernelName">垂直边缘检测卷积核</h3>
+                        <div class="kernel-display">
+                            <table class="kernel-table" id="kernelTable">
+                                <!-- 动态填充 -->
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="explanation">
+                    <h4>💡 卷积核作用</h4>
+                    <p id="kernelExplanation">这个卷积核用于检测图像中的垂直边缘。当图像中从左到右有明显的亮度变化时，输出值会很大。</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>✨ 卷积结果 (输出特征图)</h2>
+            <div class="canvas-container">
+                <canvas id="outputCanvas" width="300" height="300"></canvas>
+            </div>
+            <div class="grid-info">
+                <h3>结果分析</h3>
+                <p id="resultAnalysis">点击"执行卷积运算"查看结果。卷积操作会突出显示图像中的边缘特征。</p>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>📚 详细计算步骤</h2>
+            <div class="step-by-step" id="stepByStep">
+                <p style="color: #666; text-align: center;">点击"查看详细步骤"查看每一步的卷积计算过程</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let inputGrid = [];
+        let outputGrid = [];
+        let kernel = [];
+        const gridSize = 10;
+        const cellSize = 30;
+
+        // 动画相关变量
+        let animationState = {
+            currentStep: 0,
+            totalSteps: 0,
+            isPlaying: false,
+            speed: 1000,
+            animationId: null,
+            calculatedOutputs: []
+        };
+
+        // 不同的图片类型
+        const imagePatterns = {
+            square: {
+                name: "正方形",
+                description: "一个简单的正方形，边缘清晰，适合测试边缘检测算法。"
+            },
+            rectangle: {
+                name: "长方形",
+                description: "一个长方形，展示不同方向的边缘。"
+            },
+            triangle: {
+                name: "三角形",
+                description: "一个三角形，包含斜边和直边，测试不同角度的边缘检测。"
+            },
+            circle: {
+                name: "圆形",
+                description: "一个圆形，包含所有方向的曲边边缘。"
+            },
+            cross: {
+                name: "十字形",
+                description: "一个十字形，包含垂直和水平边缘。"
+            },
+            diagonal: {
+                name: "对角线",
+                description: "一条对角线，测试斜向边缘检测能力。"
+            }
+        };
+
+        // 不同的卷积核
+        const kernels = {
+            vertical: {
+                name: "垂直边缘检测卷积核",
+                kernel: [[1, 0, -1], [1, 0, -1], [1, 0, -1]],
+                explanation: "这个卷积核用于检测图像中的垂直边缘。当从左到右有亮度变化时，输出值会很大（正值表示从暗到亮，负值表示从亮到暗）。"
+            },
+            horizontal: {
+                name: "水平边缘检测卷积核",
+                kernel: [[1, 1, 1], [0, 0, 0], [-1, -1, -1]],
+                explanation: "这个卷积核用于检测图像中的水平边缘。当从上到下有亮度变化时，输出值会很大。"
+            },
+            sobelX: {
+                name: "Sobel X 算子",
+                kernel: [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]],
+                explanation: "Sobel X算子是垂直边缘检测的改进版本，对中间行给予更大权重，能够更好地抑制噪声。"
+            },
+            sobelY: {
+                name: "Sobel Y 算子",
+                kernel: [[-1, -2, -1], [0, 0, 0], [1, 2, 1]],
+                explanation: "Sobel Y算子是水平边缘检测的改进版本，对中间列给予更大权重。"
+            },
+            laplacian: {
+                name: "Laplacian 算子",
+                kernel: [[0, 1, 0], [1, -4, 1], [0, 1, 0]],
+                explanation: "Laplacian算子能够检测所有方向的边缘，对图像中的快速变化区域非常敏感。"
+            }
+        };
+
+        // 初始化
+        function init() {
+            generateImage('square');
+            updateKernelDisplay('vertical');
+            setupEventListeners();
+        }
+
+        // 设置事件监听
+        function setupEventListeners() {
+            document.getElementById('imageType').addEventListener('change', (e) => {
+                generateImage(e.target.value);
+            });
+
+            document.getElementById('kernelType').addEventListener('change', (e) => {
+                updateKernelDisplay(e.target.value);
+            });
+        }
+
+        // 生成图片
+        function generateImage(type) {
+            const info = imagePatterns[type];
+            document.getElementById('imageDescription').textContent = info.description;
+
+            // 初始化网格（全部为白色255）
+            inputGrid = Array(gridSize).fill().map(() => Array(gridSize).fill(255));
+
+            const center = Math.floor(gridSize / 2);
+
+            switch(type) {
+                case 'square':
+                    drawSquare(center - 3, center - 3, 6);
+                    break;
+                case 'rectangle':
+                    drawRectangle(center - 4, center - 2, 8, 4);
+                    break;
+                case 'triangle':
+                    drawTriangle(center);
+                    break;
+                case 'circle':
+                    drawCircle(center, center, 3);
+                    break;
+                case 'cross':
+                    drawCross(center, center);
+                    break;
+                case 'diagonal':
+                    drawDiagonal();
+                    break;
+            }
+
+            drawInputCanvas();
+            clearOutput();
+        }
+
+        // 绘制正方形
+        function drawSquare(startX, startY, size) {
+            for (let i = startX; i < startX + size && i < gridSize; i++) {
+                for (let j = startY; j < startY + size && j < gridSize; j++) {
+                    if (i >= 0 && j >= 0) {
+                        inputGrid[i][j] = 0;
+                    }
+                }
+            }
+        }
+
+        // 绘制长方形
+        function drawRectangle(startX, startY, width, height) {
+            for (let i = startX; i < startX + width && i < gridSize; i++) {
+                for (let j = startY; j < startY + height && j < gridSize; j++) {
+                    if (i >= 0 && j >= 0) {
+                        inputGrid[i][j] = 0;
+                    }
+                }
+            }
+        }
+
+        // 绘制三角形
+        function drawTriangle(center) {
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    // 简单的三角形
+                    const distFromCenter = Math.abs(i - center);
+                    if (j >= center - distFromCenter && j <= center + distFromCenter && i < center + 3) {
+                        if (j >= 0 && j < gridSize && i >= 0 && i < gridSize) {
+                            inputGrid[i][j] = 0;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 绘制圆形
+        function drawCircle(centerX, centerY, radius) {
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    const dist = Math.sqrt((i - centerX) ** 2 + (j - centerY) ** 2);
+                    if (dist <= radius) {
+                        inputGrid[i][j] = 0;
+                    }
+                }
+            }
+        }
+
+        // 绘制十字
+        function drawCross(centerX, centerY) {
+            const thickness = 2;
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    if (Math.abs(i - centerX) < thickness || Math.abs(j - centerY) < thickness) {
+                        inputGrid[i][j] = 0;
+                    }
+                }
+            }
+        }
+
+        // 绘制对角线
+        function drawDiagonal() {
+            for (let i = 0; i < gridSize; i++) {
+                inputGrid[i][i] = 0;
+                if (i + 1 < gridSize) {
+                    inputGrid[i][i + 1] = 0;
+                }
+            }
+        }
+
+        // 绘制输入画布
+        function drawInputCanvas() {
+            const canvas = document.getElementById('inputCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const offsetX = (canvas.width - gridSize * cellSize) / 2;
+            const offsetY = (canvas.height - gridSize * cellSize) / 2;
+
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    const value = inputGrid[i][j];
+                    ctx.fillStyle = value === 0 ? 'black' : 'white';
+                    ctx.fillRect(offsetX + j * cellSize, offsetY + i * cellSize, cellSize - 1, cellSize - 1);
+
+                    // 绘制网格线
+                    ctx.strokeStyle = '#ccc';
+                    ctx.strokeRect(offsetX + j * cellSize, offsetY + i * cellSize, cellSize - 1, cellSize - 1);
+                }
+            }
+        }
+
+        // 更新卷积核显示
+        function updateKernelDisplay(type) {
+            const kernelInfo = kernels[type];
+            kernel = kernelInfo.kernel;
+
+            document.getElementById('kernelName').textContent = kernelInfo.name;
+            document.getElementById('kernelExplanation').textContent = kernelInfo.explanation;
+
+            const table = document.getElementById('kernelTable');
+            table.innerHTML = '';
+
+            for (let i = 0; i < 3; i++) {
+                const row = table.insertRow();
+                for (let j = 0; j < 3; j++) {
+                    const cell = row.insertCell();
+                    cell.textContent = kernel[i][j];
+                }
+            }
+        }
+
+        // 执行卷积运算
+        function runConvolution() {
+            const kernelType = document.getElementById('kernelType').value;
+            kernel = kernels[kernelType].kernel;
+
+            // 初始化输出网格
+            const outputSize = gridSize - 2;
+            outputGrid = Array(outputSize).fill().map(() => Array(outputSize).fill(0));
+
+            // 执行卷积
+            for (let i = 0; i < outputSize; i++) {
+                for (let j = 0; j < outputSize; j++) {
+                    let sum = 0;
+                    for (let ki = 0; ki < 3; ki++) {
+                        for (let kj = 0; kj < 3; kj++) {
+                            sum += inputGrid[i + ki][j + kj] * kernel[ki][kj];
+                        }
+                    }
+                    outputGrid[i][j] = sum;
+                }
+            }
+
+            drawOutputCanvas();
+            analyzeResult();
+        }
+
+        // 绘制输出画布
+        function drawOutputCanvas() {
+            const canvas = document.getElementById('outputCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 找到最大绝对值用于归一化
+            let maxAbs = 0;
+            for (let i = 0; i < outputGrid.length; i++) {
+                for (let j = 0; j < outputGrid[i].length; j++) {
+                    maxAbs = Math.max(maxAbs, Math.abs(outputGrid[i][j]));
+                }
+            }
+
+            const outputSize = outputGrid.length;
+            const offsetX = (canvas.width - outputSize * cellSize) / 2;
+            const offsetY = (canvas.height - outputSize * cellSize) / 2;
+
+            for (let i = 0; i < outputSize; i++) {
+                for (let j = 0; j < outputSize; j++) {
+                    const value = outputGrid[i][j];
+                    const normalized = maxAbs > 0 ? Math.abs(value) / maxAbs : 0;
+
+                    // 根据值的大小选择颜色（越强越亮）
+                    const intensity = Math.floor(normalized * 255);
+                    ctx.fillStyle = `rgb(${intensity}, ${intensity}, ${intensity})`;
+                    ctx.fillRect(offsetX + j * cellSize, offsetY + i * cellSize, cellSize - 1, cellSize - 1);
+
+                    // 绘制网格线
+                    ctx.strokeStyle = '#ccc';
+                    ctx.strokeRect(offsetX + j * cellSize, offsetY + i * cellSize, cellSize - 1, cellSize - 1);
+                }
+            }
+        }
+
+        // 分析结果
+        function analyzeResult() {
+            const kernelType = document.getElementById('kernelType').value;
+            const imageType = document.getElementById('imageType').value;
+
+            let analysis = "卷积运算完成！";
+
+            if (kernelType === 'vertical' || kernelType === 'sobelX') {
+                if (imageType === 'square' || imageType === 'rectangle') {
+                    analysis += " 可以看到图形的左右边缘被高亮显示。左侧边缘为负值（暗），右侧边缘为正值（亮）。";
+                } else if (imageType === 'cross') {
+                    analysis += " 十字的垂直部分边缘被检测到。";
+                } else if (imageType === 'diagonal') {
+                    analysis += " 对角线的两侧都产生了响应，但不是最强响应。";
+                }
+            } else if (kernelType === 'horizontal' || kernelType === 'sobelY') {
+                if (imageType === 'square' || imageType === 'rectangle') {
+                    analysis += " 可以看到图形的上下边缘被高亮显示。上方边缘为负值，下方边缘为正值。";
+                } else if (imageType === 'cross') {
+                    analysis += " 十字的水平部分边缘被检测到。";
+                }
+            } else if (kernelType === 'laplacian') {
+                analysis += " 所有方向的边缘都被检测到，形成一个闭合的轮廓。";
+            }
+
+            analysis += " 亮度越高表示边缘越强（卷积响应值越大）。";
+
+            document.getElementById('resultAnalysis').textContent = analysis;
+        }
+
+        // 显示详细步骤
+        function showStepByStep() {
+            const container = document.getElementById('stepByStep');
+            const kernelType = document.getElementById('kernelType').value;
+
+            if (outputGrid.length === 0) {
+                container.innerHTML = '<p style="color: #f00;">请先执行卷积运算！</p>';
+                return;
+            }
+
+            let html = '<h3>卷积运算详细步骤</h3>';
+            html += '<p><strong>公式：</strong>输出[i][j] = Σ(输入[i+ki][j+kj] × 卷积核[ki][kj])</p>';
+            html += '<p>其中ki和kj从0到2遍历卷积核的所有元素。</p>';
+
+            // 选择几个代表性的位置展示
+            const examples = [
+                { pos: [0, 0], title: "左上角位置" },
+                { pos: [Math.floor(outputGrid.length / 2), Math.floor(outputGrid.length / 2)], title: "中心位置" },
+                { pos: [outputGrid.length - 1, outputGrid.length - 1], title: "右下角位置" }
+            ];
+
+            examples.forEach((example, idx) => {
+                const [i, j] = example.pos;
+                html += `<div class="calculation-step">`;
+                html += `<div class="step-title">${idx + 1}. ${example.title} [${i}, ${j}]</div>`;
+
+                html += '<div class="math-display">';
+                html += '<div>输入区域:</div>';
+                html += createMiniGrid(inputGrid, i, j);
+                html += '<div>×</div>';
+                html += createMiniGrid(kernel, 0, 0, true);
+                html += '<div>=</div>';
+                html += `<div><strong>${outputGrid[i][j]}</strong></div>`;
+                html += '</div>';
+
+                html += '<div class="formula">';
+                html += createDetailedCalculation(inputGrid, kernel, i, j);
+                html += '</div>';
+                html += '</div>';
+            });
+
+            container.innerHTML = html;
+        }
+
+        // 创建小型网格显示
+        function createMiniGrid(grid, startRow, startCol, isKernel = false) {
+            let html = '<div class="mini-grid">';
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    const row = startRow + i;
+                    const col = startCol + j;
+                    const value = (row < grid.length && col < grid[0].length) ? grid[row][col] : 0;
+                    html += `<div class="cell">${value}</div>`;
+                }
+            }
+            html += '</div>';
+            return html;
+        }
+
+        // 创建详细计算过程
+        function createDetailedCalculation(input, kernel, outI, outJ) {
+            let parts = [];
+            for (let ki = 0; ki < 3; ki++) {
+                for (let kj = 0; kj < 3; kj++) {
+                    const inputValue = input[outI + ki][outJ + kj];
+                    const kernelValue = kernel[ki][kj];
+                    const product = inputValue * kernelValue;
+                    parts.push(`(${inputValue} × ${kernelValue})`);
+                }
+            }
+            return parts.join(' + ') + ' = ' + outputGrid[outI][outJ];
+        }
+
+        // 清空输出
+        function clearOutput() {
+            outputGrid = [];
+            const canvas = document.getElementById('outputCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#999';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('点击"执行卷积运算"查看结果', canvas.width / 2, canvas.height / 2);
+
+            document.getElementById('resultAnalysis').textContent = '点击"执行卷积运算"查看结果。卷积操作会突出显示图像中的边缘特征。';
+            document.getElementById('stepByStep').innerHTML = '<p style="color: #666; text-align: center;">点击"查看详细步骤"查看每一步的卷积计算过程</p>';
+        }
+
+        // 重置所有
+        function resetAll() {
+            document.getElementById('imageType').value = 'square';
+            document.getElementById('kernelType').value = 'vertical';
+            generateImage('square');
+            updateKernelDisplay('vertical');
+            clearOutput();
+            resetAnimation();
+        }
+
+        // ==================== 动画演示功能 ====================
+
+        // 启动动画
+        function startAnimation() {
+            // 先执行卷积计算
+            runConvolution();
+
+            // 初始化动画状态
+            const outputSize = gridSize - 2;
+            animationState.totalSteps = outputSize * outputSize;
+            animationState.currentStep = 0;
+            animationState.calculatedOutputs = Array(outputSize).fill().map(() => Array(outputSize).fill(null));
+
+            // 显示动画面板
+            document.getElementById('animationPanel').style.display = 'block';
+
+            // 滚动到动画面板
+            setTimeout(() => {
+                document.getElementById('animationPanel').scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+
+            // 初始化动画画布
+            initAnimationCanvases();
+
+            // 开始播放
+            animationState.isPlaying = true;
+            document.getElementById('playBtn').textContent = '⏸️ 暂停';
+            playAnimation();
+        }
+
+        // 初始化动画画布
+        function initAnimationCanvases() {
+            const inputCanvas = document.getElementById('animationInputCanvas');
+            const outputCanvas = document.getElementById('animationOutputCanvas');
+            const inputCtx = inputCanvas.getContext('2d');
+            const outputCtx = outputCanvas.getContext('2d');
+
+            // 绘制输入画布
+            inputCtx.clearRect(0, 0, inputCanvas.width, inputCanvas.height);
+            const offsetX = (inputCanvas.width - gridSize * cellSize) / 2;
+            const offsetY = (inputCanvas.height - gridSize * cellSize) / 2;
+
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    const value = inputGrid[i][j];
+                    inputCtx.fillStyle = value === 0 ? 'black' : 'white';
+                    inputCtx.fillRect(offsetX + j * cellSize, offsetY + i * cellSize, cellSize - 1, cellSize - 1);
+                    inputCtx.strokeStyle = '#ccc';
+                    inputCtx.strokeRect(offsetX + j * cellSize, offsetY + i * cellSize, cellSize - 1, cellSize - 1);
+                }
+            }
+
+            // 绘制输出画布（初始空白）
+            const outputSize = gridSize - 2;
+            outputCtx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
+            const outputOffsetX = (outputCanvas.width - outputSize * cellSize) / 2;
+            const outputOffsetY = (outputCanvas.height - outputSize * cellSize) / 2;
+
+            for (let i = 0; i < outputSize; i++) {
+                for (let j = 0; j < outputSize; j++) {
+                    outputCtx.fillStyle = '#f0f0f0';
+                    outputCtx.fillRect(outputOffsetX + j * cellSize, outputOffsetY + i * cellSize, cellSize - 1, cellSize - 1);
+                    outputCtx.strokeStyle = '#ddd';
+                    outputCtx.strokeRect(outputOffsetX + j * cellSize, outputOffsetY + i * cellSize, cellSize - 1, cellSize - 1);
+                }
+            }
+
+            // 更新总步数显示
+            document.getElementById('totalPos').textContent = `[${outputSize - 1}, ${outputSize - 1}]`;
+            document.getElementById('totalCount').textContent = outputSize * outputSize;
+        }
+
+        // 播放动画
+        function playAnimation() {
+            if (!animationState.isPlaying) return;
+
+            animationStep();
+
+            animationState.animationId = setTimeout(() => {
+                if (animationState.currentStep < animationState.totalSteps) {
+                    playAnimation();
+                } else {
+                    animationState.isPlaying = false;
+                    document.getElementById('playBtn').textContent = '▶️ 播放';
+                }
+            }, animationState.speed);
+        }
+
+        // 单步动画
+        function animationStep() {
+            if (animationState.currentStep >= animationState.totalSteps) {
+                return;
+            }
+
+            const outputSize = gridSize - 2;
+            const i = Math.floor(animationState.currentStep / outputSize);
+            const j = animationState.currentStep % outputSize;
+
+            // 计算当前位置的卷积结果
+            let sum = 0;
+            for (let ki = 0; ki < 3; ki++) {
+                for (let kj = 0; kj < 3; kj++) {
+                    sum += inputGrid[i + ki][j + kj] * kernel[ki][kj];
+                }
+            }
+            animationState.calculatedOutputs[i][j] = sum;
+
+            // 更新显示
+            updateKernelOverlay(i, j);
+            updateOutputDisplay(i, j);
+            updateCalculationDisplay(i, j, sum);
+
+            animationState.currentStep++;
+
+            // 更新位置显示
+            document.getElementById('currentPos').textContent = `[${i}, ${j}]`;
+            document.getElementById('calculatedCount').textContent = animationState.currentStep;
+        }
+
+        // 更新卷积核叠加层位置
+        function updateKernelOverlay(i, j) {
+            const overlay = document.getElementById('kernelOverlay');
+            const inputCanvas = document.getElementById('animationInputCanvas');
+            const offsetX = (inputCanvas.width - gridSize * cellSize) / 2;
+            const offsetY = (inputCanvas.height - gridSize * cellSize) / 2;
+
+            overlay.style.width = (3 * cellSize) + 'px';
+            overlay.style.height = (3 * cellSize) + 'px';
+            overlay.style.left = (offsetX + j * cellSize) + 'px';
+            overlay.style.top = (offsetY + i * cellSize) + 'px';
+            overlay.style.display = 'block';
+        }
+
+        // 更新输出显示
+        function updateOutputDisplay(i, j) {
+            const outputCanvas = document.getElementById('animationOutputCanvas');
+            const outputCtx = outputCanvas.getContext('2d');
+            const outputSize = gridSize - 2;
+            const outputOffsetX = (outputCanvas.width - outputSize * cellSize) / 2;
+            const outputOffsetY = (outputCanvas.height - outputSize * cellSize) / 2;
+
+            // 找到最大绝对值用于归一化
+            let maxAbs = 0;
+            for (let row = 0; row <= i; row++) {
+                for (let col = 0; col < outputSize; col++) {
+                    if (animationState.calculatedOutputs[row][col] !== null) {
+                        maxAbs = Math.max(maxAbs, Math.abs(animationState.calculatedOutputs[row][col]));
+                    }
+                }
+            }
+
+            // 重新绘制所有已计算的单元格
+            for (let row = 0; row <= i; row++) {
+                for (let col = 0; col < outputSize; col++) {
+                    if (animationState.calculatedOutputs[row][col] !== null) {
+                        const value = animationState.calculatedOutputs[row][col];
+                        const normalized = maxAbs > 0 ? Math.abs(value) / maxAbs : 0;
+                        const intensity = Math.floor(normalized * 255);
+
+                        outputCtx.fillStyle = `rgb(${intensity}, ${intensity}, ${intensity})`;
+                        outputCtx.fillRect(
+                            outputOffsetX + col * cellSize,
+                            outputOffsetY + row * cellSize,
+                            cellSize - 1,
+                            cellSize - 1
+                        );
+                        outputCtx.strokeStyle = '#999';
+                        outputCtx.strokeRect(
+                            outputOffsetX + col * cellSize,
+                            outputOffsetY + row * cellSize,
+                            cellSize - 1,
+                            cellSize - 1
+                        );
+                    }
+                }
+            }
+
+            // 高亮当前计算的单元格
+            outputCtx.strokeStyle = '#ff6b6b';
+            outputCtx.lineWidth = 3;
+            outputCtx.strokeRect(
+                outputOffsetX + j * cellSize,
+                outputOffsetY + i * cellSize,
+                cellSize - 1,
+                cellSize - 1
+            );
+            outputCtx.lineWidth = 1;
+        }
+
+        // 更新计算显示
+        function updateCalculationDisplay(i, j, result) {
+            // 输入区域网格
+            let inputHtml = '';
+            for (let ki = 0; ki < 3; ki++) {
+                for (let kj = 0; kj < 3; kj++) {
+                    inputHtml += `<div class="cell">${inputGrid[i + ki][j + kj]}</div>`;
+                }
+            }
+            document.getElementById('inputAreaGrid').innerHTML = inputHtml;
+
+            // 卷积核网格
+            let kernelHtml = '';
+            for (let ki = 0; ki < 3; ki++) {
+                for (let kj = 0; kj < 3; kj++) {
+                    kernelHtml += `<div class="cell">${kernel[ki][kj]}</div>`;
+                }
+            }
+            document.getElementById('kernelGrid').innerHTML = kernelHtml;
+
+            // 结果
+            document.getElementById('calculationResult').textContent = result;
+
+            // 计算公式
+            let formulaParts = [];
+            for (let ki = 0; ki < 3; ki++) {
+                for (let kj = 0; kj < 3; kj++) {
+                    formulaParts.push(`(${inputGrid[i + ki][j + kj]} × ${kernel[ki][kj]})`);
+                }
+            }
+            document.getElementById('calculationFormula').textContent =
+                formulaParts.join(' + ') + ' = ' + result;
+
+            // 说明
+            let explanation = `当前位置 [${i}, ${j}] 的卷积计算：`;
+            explanation += `将输入图像中从 [${i}, ${j}] 开始的 3×3 区域与卷积核对应元素相乘，然后求和。`;
+            explanation += `结果 ${result} 表示该位置的边缘强度。`;
+            document.getElementById('calculationExplanation').textContent = explanation;
+        }
+
+        // 切换播放/暂停
+        function togglePlay() {
+            if (animationState.currentStep >= animationState.totalSteps) {
+                // 如果已经结束，重新开始
+                animationState.currentStep = 0;
+                animationState.calculatedOutputs = Array(gridSize - 2).fill().map(() => Array(gridSize - 2).fill(null));
+                initAnimationCanvases();
+            }
+
+            animationState.isPlaying = !animationState.isPlaying;
+            const playBtn = document.getElementById('playBtn');
+
+            if (animationState.isPlaying) {
+                playBtn.textContent = '⏸️ 暂停';
+                playAnimation();
+            } else {
+                playBtn.textContent = '▶️ 播放';
+                if (animationState.animationId) {
+                    clearTimeout(animationState.animationId);
+                }
+            }
+        }
+
+        // 上一步
+        function previousStep() {
+            if (animationState.currentStep <= 0) return;
+
+            animationState.isPlaying = false;
+            document.getElementById('playBtn').textContent = '▶️ 播放';
+            if (animationState.animationId) {
+                clearTimeout(animationState.animationId);
+            }
+
+            animationState.currentStep--;
+            const outputSize = gridSize - 2;
+            const i = Math.floor(animationState.currentStep / outputSize);
+            const j = animationState.currentStep % outputSize;
+
+            // 标记当前及之后的位置为未计算
+            for (let row = i; row < outputSize; row++) {
+                for (let col = (row === i ? j : 0); col < outputSize; col++) {
+                    animationState.calculatedOutputs[row][col] = null;
+                }
+            }
+
+            // 更新显示
+            updateKernelOverlay(i, j);
+            updateOutputDisplay(i, j);
+            updateCalculationDisplay(i, j, outputGrid[i][j]);
+        }
+
+        // 下一步
+        function nextStep() {
+            if (animationState.currentStep >= animationState.totalSteps) return;
+
+            animationState.isPlaying = false;
+            document.getElementById('playBtn').textContent = '▶️ 播放';
+            if (animationState.animationId) {
+                clearTimeout(animationState.animationId);
+            }
+
+            animationStep();
+        }
+
+        // 重置动画
+        function resetAnimation() {
+            animationState.isPlaying = false;
+            animationState.currentStep = 0;
+            if (animationState.animationId) {
+                clearTimeout(animationState.animationId);
+            }
+
+            const outputSize = gridSize - 2;
+            animationState.calculatedOutputs = Array(outputSize).fill().map(() => Array(outputSize).fill(null));
+
+            document.getElementById('playBtn').textContent = '▶️ 播放';
+            document.getElementById('currentPos').textContent = '[0, 0]';
+            document.getElementById('calculatedCount').textContent = '0';
+
+            const overlay = document.getElementById('kernelOverlay');
+            overlay.style.display = 'none';
+
+            if (document.getElementById('animationPanel').style.display === 'block') {
+                initAnimationCanvases();
+            }
+        }
+
+        // 更新速度
+        function updateSpeed() {
+            const slider = document.getElementById('speedSlider');
+            const value = parseInt(slider.value);
+            animationState.speed = 2000 / value; // 速度值越大，间隔越短
+            document.getElementById('speedValue').textContent = value + 'x';
+        }
+
+        // 页面加载时初始化
+        window.onload = init;
+    </script>
+</body>
+</html>

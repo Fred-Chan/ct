@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猜数字游戏 - 二分查找法</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+        }
+
+        .intro {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        .intro h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .intro p {
+            color: #555;
+            line-height: 1.8;
+            margin: 8px 0;
+        }
+
+        .game-section {
+            display: none;
+        }
+
+        .game-section.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .difficulty-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .difficulty-btn {
+            background: white;
+            border: 3px solid #667eea;
+            padding: 25px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .difficulty-btn:hover {
+            background: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .difficulty-btn h3 {
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .difficulty-btn:hover h3 {
+            color: white;
+        }
+
+        .difficulty-btn p {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .difficulty-btn:hover p {
+            color: white;
+        }
+
+        .game-area {
+            text-align: center;
+        }
+
+        .range-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-size: 1.3em;
+        }
+
+        .guess-number {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .guess-number .number {
+            font-size: 4em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+        }
+
+        .guess-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .btn-small {
+            padding: 10px 20px;
+            font-size: 0.9em;
+        }
+
+        .btn-big {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-big:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-up {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-up:hover {
+            background: #45a049;
+        }
+
+        .btn-down {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-down:hover {
+            background: #da190b;
+        }
+
+        .btn-correct {
+            background: #ff9800;
+            color: white;
+        }
+
+        .btn-correct:hover {
+            background: #f57c00;
+        }
+
+        .history {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .history h3 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+
+        .history-item {
+            background: white;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 5px;
+            border-left: 3px solid #ffc107;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item.correct {
+            border-left-color: #4caf50;
+            background: #e8f5e9;
+        }
+
+        .result {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            margin: 20px 0;
+            color: white;
+        }
+
+        .result h2 {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .explanation {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .explanation h3 {
+            color: #1565c0;
+            margin-bottom: 10px;
+        }
+
+        .explanation p {
+            color: #424242;
+            line-height: 1.6;
+            margin: 8px 0;
+        }
+
+        .binary-visualization {
+            background: #f3e5f5;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .binary-visualization h4 {
+            color: #6a1b9a;
+            margin-bottom: 15px;
+        }
+
+        .visual-array {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            justify-content: center;
+            margin: 15px 0;
+        }
+
+        .array-item {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            padding: 8px 12px;
+            font-weight: bold;
+            color: #667eea;
+            font-size: 0.9em;
+        }
+
+        .array-item.current {
+            background: #ff9800;
+            border-color: #ff9800;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .array-item.eliminated {
+            background: #e0e0e0;
+            border-color: #e0e0e0;
+            color: #999;
+        }
+
+        .array-item.found {
+            background: #4caf50;
+            border-color: #4caf50;
+            color: white;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+        }
+
+        .stat-box .number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-box .label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            .difficulty-selector {
+                grid-template-columns: 1fr;
+            }
+
+            .guess-buttons {
+                flex-direction: column;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 猜数字游戏 - 二分查找法</h1>
+
+        <!-- 开始界面 -->
+        <div id="startScreen" class="game-section active">
+            <div class="intro">
+                <h3>🎮 游戏规则</h3>
+                <p><strong>目标：</strong>计算机将用最少的次数猜出你心中想的数字！</p>
+                <p><strong>规则：</strong></p>
+                <p>1️⃣ 你在心中<strong>默默想</strong>一个数字（根据选择的难度），不要告诉计算机！</p>
+                <p>2️⃣ 计算机会猜一个数字</p>
+                <p>3️⃣ 你告诉计算机：太大了、太小了、或正确</p>
+                <p>4️⃣ 计算机会用【二分查找法】快速找到你的数字！</p>
+            </div>
+
+            <div class="intro">
+                <h3>💡 什么是二分查找？</h3>
+                <p>二分查找是一种高效的搜索算法：</p>
+                <p>• 每次都从<strong>中间</strong>开始猜</p>
+                <p>• 根据回答，可以排除<strong>一半</strong>的数字</p>
+                <p>• 重复这个过程，直到找到目标</p>
+                <p>• 就像查字典一样，每次都从中间翻！</p>
+            </div>
+
+            <p style="text-align: center; font-size: 1.2em; color: #667eea; font-weight: bold; margin: 20px 0;">
+                选择难度等级：
+            </p>
+
+            <div class="difficulty-selector">
+                <div class="difficulty-btn" onclick="startGame(2)">
+                    <h3>😊 简单</h3>
+                    <p>两位数（0-99）</p>
+                    <p><small>最多7次猜中</small></p>
+                </div>
+
+                <div class="difficulty-btn" onclick="startGame(3)">
+                    <h3>🤔 中等</h3>
+                    <p>三位数（0-999）</p>
+                    <p><small>最多10次猜中</small></p>
+                </div>
+
+                <div class="difficulty-btn" onclick="startGame(4)">
+                    <h3>😰 困难</h3>
+                    <p>四位数（0-9999）</p>
+                    <p><small>最多14次猜中</small></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 游戏界面 -->
+        <div id="gameScreen" class="game-section">
+            <div class="range-display">
+                <div>🎯 你心中想的数字范围：<span id="rangeText">10 - 99</span></div>
+                <div style="font-size: 0.9em; margin-top: 10px;">计算机不知道你的数字，它只能通过猜测来找！</div>
+            </div>
+
+            <div class="guess-number">
+                <p style="color: #666; margin-bottom: 10px;">计算机猜：</p>
+                <div class="number" id="currentGuess">?</div>
+            </div>
+
+            <div class="guess-buttons">
+                <button class="btn btn-up" onclick="answerGuess('up')">📈 太大了</button>
+                <button class="btn btn-correct" onclick="answerGuess('correct')">✅ 正确！</button>
+                <button class="btn btn-down" onclick="answerGuess('down')">📉 太小了</button>
+            </div>
+
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="number" id="guessCount">0</div>
+                    <div class="label">猜测次数</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="remainingNumbers">100</div>
+                    <div class="label">剩余数字</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="maxGuesses">7</div>
+                    <div class="label">理论最多次数</div>
+                </div>
+            </div>
+
+            <div class="binary-visualization">
+                <h4>📊 搜索过程可视化：</h4>
+                <div class="visual-array" id="visualArray"></div>
+            </div>
+
+            <div class="history">
+                <h3>📝 猜测记录：</h3>
+                <div id="historyList"></div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-small" onclick="backToStart()">← 返回主菜单</button>
+            </div>
+        </div>
+
+        <!-- 结果界面 -->
+        <div id="resultScreen" class="game-section">
+            <div class="result">
+                <h2 id="resultTitle">🎉 猜中了！</h2>
+                <p style="font-size: 1.3em; margin: 15px 0;">
+                    你心中的数字是：<strong style="font-size: 1.5em;" id="resultNumber">?</strong>
+                </p>
+                <p id="resultMessage" style="font-size: 1.1em;"></p>
+            </div>
+
+            <div class="explanation">
+                <h3>🔍 算法解析</h3>
+                <p><strong>二分查找原理：</strong></p>
+                <p id="algorithmExplanation"></p>
+            </div>
+
+            <div class="explanation">
+                <h3>📊 效率分析</h3>
+                <p><strong>你的表现：</strong></p>
+                <p id="performanceAnalysis"></p>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-big" onclick="backToStart()">再玩一次 🔄</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态
+        let minRange = 10;
+        let maxRange = 99;
+        let targetNumber = 0;
+        let currentGuess = 0;
+        let guessCount = 0;
+        let guessHistory = [];
+        let totalNumbers = 0;
+
+        // 开始游戏
+        function startGame(digits) {
+            // 设置范围
+            if (digits === 2) {
+                minRange = 0;
+                maxRange = 99;
+            } else if (digits === 3) {
+                minRange = 0;
+                maxRange = 999;
+            } else if (digits === 4) {
+                minRange = 0;
+                maxRange = 9999;
+            }
+
+            totalNumbers = maxRange - minRange + 1;
+            guessCount = 0;
+            guessHistory = [];
+            targetNumber = 0; // 不需要输入，由用户心中想一个数字
+
+            showScreen('gameScreen');
+            updateDisplay();
+            makeGuess();
+        }
+
+        // 计算机猜测（二分查找）
+        function makeGuess() {
+            currentGuess = Math.floor((minRange + maxRange) / 2);
+            document.getElementById('currentGuess').textContent = currentGuess;
+            updateVisualArray();
+        }
+
+        // 用户回答
+        function answerGuess(answer) {
+            guessCount++;
+            let feedback = '';
+
+            if (answer === 'up') {
+                feedback = '↑ 太大了';
+                maxRange = currentGuess - 1;
+                guessHistory.push({ guess: currentGuess, feedback: feedback, type: 'up' });
+            } else if (answer === 'down') {
+                feedback = '↓ 太小了';
+                minRange = currentGuess + 1;
+                guessHistory.push({ guess: currentGuess, feedback: feedback, type: 'down' });
+            } else if (answer === 'correct') {
+                feedback = '✓ 正确';
+                guessHistory.push({ guess: currentGuess, feedback: feedback, type: 'correct' });
+                targetNumber = currentGuess; // 用户确认这就是正确答案
+                showResult(true);
+                return;
+            }
+
+            updateDisplay();
+            makeGuess();
+        }
+
+        // 更新显示
+        function updateDisplay() {
+            document.getElementById('rangeText').textContent = `${minRange} - ${maxRange}`;
+            document.getElementById('guessCount').textContent = guessCount;
+
+            const remaining = maxRange - minRange + 1;
+            document.getElementById('remainingNumbers').textContent = remaining;
+
+            // 计算理论最多次数
+            const maxGuesses = Math.ceil(Math.log2(totalNumbers));
+            document.getElementById('maxGuesses').textContent = maxGuesses;
+
+            // 更新历史记录
+            updateHistory();
+        }
+
+        // 更新历史记录
+        function updateHistory() {
+            const list = document.getElementById('historyList');
+            list.innerHTML = '';
+
+            guessHistory.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'history-item' + (item.type === 'correct' ? ' correct' : '');
+                div.innerHTML = `
+                    <span>第${index + 1}次：猜 <strong>${item.guess}</strong> → ${item.feedback}</span>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // 更新可视化数组
+        function updateVisualArray() {
+            const container = document.getElementById('visualArray');
+            container.innerHTML = '';
+
+            // 只显示当前范围的数字（如果数字太多，就采样显示）
+            let displayNumbers = [];
+            if (maxRange - minRange <= 40) {
+                // 数字少，全部显示
+                for (let i = minRange; i <= maxRange; i++) {
+                    displayNumbers.push(i);
+                }
+            } else {
+                // 数字多，采样显示
+                const step = Math.ceil((maxRange - minRange) / 20);
+                for (let i = minRange; i <= maxRange; i += step) {
+                    displayNumbers.push(i);
+                }
+                if (maxRange - minRange + 1 > 40) {
+                    displayNumbers.push(maxRange);
+                }
+            }
+
+            displayNumbers.forEach(num => {
+                const div = document.createElement('div');
+                div.className = 'array-item';
+
+                if (num === currentGuess) {
+                    div.className += ' current';
+                } else if (num < minRange || num > maxRange) {
+                    div.className += ' eliminated';
+                } else if (num === targetNumber && guessHistory.some(h => h.guess === currentGuess && h.type === 'correct')) {
+                    div.className += ' found';
+                }
+
+                div.textContent = num;
+                container.appendChild(div);
+            });
+        }
+
+        // 显示结果
+        function showResult(success) {
+            showScreen('resultScreen');
+
+            document.getElementById('resultNumber').textContent = targetNumber;
+
+            const maxGuesses = Math.ceil(Math.log2(totalNumbers));
+
+            document.getElementById('resultTitle').textContent = '🎉 猜中了！';
+            document.getElementById('resultMessage').textContent =
+                `用了 ${guessCount} 次，理论上最多需要 ${maxGuesses} 次`;
+
+            // 根据总数字数量确定范围显示
+            let rangeDisplay = '';
+            if (totalNumbers === 100) {
+                rangeDisplay = '0-99（共100个数字）';
+            } else if (totalNumbers === 1000) {
+                rangeDisplay = '0-999（共1000个数字）';
+            } else if (totalNumbers === 10000) {
+                rangeDisplay = '0-9999（共10000个数字）';
+            }
+
+            // 算法解释
+            document.getElementById('algorithmExplanation').innerHTML = `
+                <strong>二分查找步骤：</strong><br>
+                1️⃣ 初始范围：${rangeDisplay}<br>
+                2️⃣ 每次猜中间值，排除一半<br>
+                3️⃣ 根据你的回答调整范围<br>
+                4️⃣ 最终找到：${targetNumber}
+            `;
+
+            document.getElementById('performanceAnalysis').innerHTML = `
+                <strong>二分查找的威力：</strong><br>
+                • 实际猜测：${guessCount} 次<br>
+                • 理论最多：${maxGuesses} 次<br>
+                • 如果不用二分查找，最坏情况可能要猜 ${totalNumbers} 次！<br>
+                • 二分查找让搜索效率大大提升！🚀
+            `;
+        }
+
+        // 返回开始界面
+        function backToStart() {
+            showScreen('startScreen');
+        }
+
+        // 显示指定屏幕
+        function showScreen(screenId) {
+            document.querySelectorAll('.game-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+    </script>
+</body>
+</html>

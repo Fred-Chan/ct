@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二进制加密解密游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f0f0f0;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s;
+            border: none;
+            background: transparent;
+        }
+
+        .tab:hover {
+            background: #e0e0e0;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .converter-box {
+            margin-bottom: 30px;
+        }
+
+        .converter-box h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1em;
+            font-family: 'Courier New', monospace;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .binary-grid {
+            display: inline-grid;
+            gap: 3px;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            border: 2px solid #ddd;
+        }
+
+        .binary-cell {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ccc;
+            transition: all 0.3s;
+        }
+
+        .binary-cell.white {
+            background: white;
+        }
+
+        .binary-cell.black {
+            background: black;
+        }
+
+        .game-area {
+            text-align: center;
+        }
+
+        .game-controls {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 10px;
+        }
+
+        .game-grid {
+            display: inline-grid;
+            gap: 3px;
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            border: 3px solid #667eea;
+        }
+
+        .game-cell {
+            width: 35px;
+            height: 35px;
+            border: 2px solid #ccc;
+            transition: all 0.3s;
+        }
+
+        .game-cell.white {
+            background: white;
+        }
+
+        .game-cell.black {
+            background: black;
+        }
+
+        .hint-box {
+            margin: 20px 0;
+            padding: 15px;
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .hint-box.show {
+            display: block;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+        }
+
+        .score-item {
+            text-align: center;
+        }
+
+        .score-item .label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .score-item .value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .result-message {
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: center;
+            display: none;
+        }
+
+        .result-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #28a745;
+            display: block;
+        }
+
+        .result-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #dc3545;
+            display: block;
+        }
+
+        .difficulty-selector {
+            margin: 20px 0;
+        }
+
+        .difficulty-selector select {
+            padding: 10px 20px;
+            font-size: 1.1em;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .info-box {
+            margin: 20px 0;
+            padding: 15px;
+            background: #d1ecf1;
+            border: 2px solid #17a2b8;
+            border-radius: 10px;
+        }
+
+        .info-box h4 {
+            color: #0c5460;
+            margin-bottom: 10px;
+        }
+
+        .info-box p {
+            color: #0c5460;
+            line-height: 1.6;
+        }
+
+        .example-box {
+            background: #fff;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .tab {
+                padding: 15px 10px;
+                font-size: 0.9em;
+            }
+
+            .content {
+                padding: 15px;
+            }
+
+            .binary-cell, .game-cell {
+                width: 25px;
+                height: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔐 二进制加密解密游戏</h1>
+            <p>学习字母、二进制数字和黑白图片之间的转换</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('converter')">📝 文本转换器</button>
+            <button class="tab" onclick="switchTab('image')">🎨 黑白图片转换</button>
+            <button class="tab" onclick="switchTab('game')">🎮 解码游戏</button>
+        </div>
+
+        <div class="content">
+            <!-- 文本转换器部分 -->
+            <div id="converter" class="section active">
+                <div class="info-box" style="margin-bottom: 20px;">
+                    <h4>📖 功能介绍</h4>
+                    <p>输入任何英文文字，立即查看它对应的二进制代码；或者输入二进制数字，还原出原始文字——就像计算机内部存储数据一样！</p>
+                </div>
+
+                <div class="converter-box">
+                    <h3>文字转二进制</h3>
+                    <div class="input-group">
+                        <label for="textInput">输入英文文字：</label>
+                        <textarea id="textInput" rows="3" placeholder="例如: Hello World" oninput="convertTextToBinary()"></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label for="binaryOutput">二进制输出（8位ASCII）：</label>
+                        <textarea id="binaryOutput" rows="3" readonly placeholder="例如: 01001000 01100101 01101100 01101100 01101111"></textarea>
+                    </div>
+                </div>
+
+                <div class="converter-box">
+                    <h3>二进制转文字</h3>
+                    <div class="input-group">
+                        <label for="binaryInput">输入二进制（用空格分隔每个8位）：</label>
+                        <textarea id="binaryInput" rows="3" placeholder="例如: 01001000 01100101 01101100 01101100 01101111" oninput="convertBinaryToText()"></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label for="textOutput">文字输出：</label>
+                        <textarea id="textOutput" rows="3" readonly placeholder="例如: Hello"></textarea>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h4>💡 编码说明</h4>
+                    <p>我们使用8位ASCII编码：</p>
+                    <div class="example-box">
+                        'A' = 65 = 01000001<br>
+                        'B' = 66 = 01000010<br>
+                        'a' = 97 = 01100001<br>
+                        ' ' = 32 = 00100000 (空格)
+                    </div>
+                </div>
+            </div>
+
+            <!-- 黑白图片转换部分 -->
+            <div id="image" class="section">
+                <div class="info-box" style="margin-bottom: 20px;">
+                    <h4>🎖 功能介绍</h4>
+                    <p>把枯燥的二进制数字变成有趣的黑白格子图案，一眼就能看出0和1的排列——这就是计算机"看"数据的方式！</p>
+                </div>
+
+                <div class="converter-box">
+                    <h3>二进制转黑白图片</h3>
+                    <div class="input-group">
+                        <label for="binaryToImageInput">输入二进制（用空格分隔每个8位）：</label>
+                        <textarea id="binaryToImageInput" rows="3" placeholder="例如: 01001000 01100101" oninput="convertBinaryToImage()"></textarea>
+                    </div>
+                    <div style="text-align: center;">
+                        <label>黑白格子图片：</label>
+                        <div id="binaryImageGrid" class="binary-grid"></div>
+                        <p style="margin-top: 10px; color: #666;">⬜ 白色 = 1，⬛ 黑色 = 0</p>
+                    </div>
+                </div>
+
+                <div class="converter-box">
+                    <h3>文字转黑白图片</h3>
+                    <div class="input-group">
+                        <label for="textToImageInput">输入英文文字：</label>
+                        <input type="text" id="textToImageInput" placeholder="例如: Hi" oninput="convertTextToImage()">
+                    </div>
+                    <div style="text-align: center;">
+                        <label>黑白格子图片：</label>
+                        <div id="textImageGrid" class="binary-grid"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 解码游戏部分 -->
+            <div id="game" class="section">
+                <div class="game-area">
+                    <div class="info-box" style="margin-bottom: 20px; text-align: left;">
+                        <h4>🎮 功能介绍</h4>
+                        <p>看黑白格子，猜英文单词！像侦探一样破解"密码"，锻炼你的二进制转换能力，挑战更高分数！</p>
+                    </div>
+
+                    <h2>🎯 解码挑战</h2>
+
+                    <div class="score-board">
+                        <div class="score-item">
+                            <div class="label">得分</div>
+                            <div class="value" id="score">0</div>
+                        </div>
+                        <div class="score-item">
+                            <div class="label">连胜</div>
+                            <div class="value" id="streak">0</div>
+                        </div>
+                        <div class="score-item">
+                            <div class="label">最高分</div>
+                            <div class="value" id="highScore">0</div>
+                        </div>
+                    </div>
+
+                    <div class="game-controls">
+                        <div class="difficulty-selector">
+                            <label for="difficulty">选择难度：</label>
+                            <select id="difficulty">
+                                <option value="easy">简单 - 单个字母</option>
+                                <option value="medium" selected>中等 - 短单词</option>
+                                <option value="hard">困难 - 长单词</option>
+                            </select>
+                        </div>
+                        <button class="btn" onclick="startNewGame()">🎲 新题目</button>
+                        <button class="btn btn-secondary" onclick="showHint()">💡 提示</button>
+                    </div>
+
+                    <div id="gameArea">
+                        <p style="margin-bottom: 15px; font-size: 1.1em;">观察下面的黑白格子，解码出对应的英文单词：</p>
+                        <div id="gameGrid" class="game-grid"></div>
+
+                        <div class="input-group" style="max-width: 400px; margin: 20px auto;">
+                            <label for="gameAnswer">输入你的答案：</label>
+                            <input type="text" id="gameAnswer" placeholder="输入解码的单词" onkeypress="if(event.key==='Enter')checkAnswer()">
+                        </div>
+
+                        <button class="btn" onclick="checkAnswer()">✅ 提交答案</button>
+
+                        <div id="hintBox" class="hint-box"></div>
+                        <div id="resultMessage" class="result-message"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏数据
+        const wordDatabase = {
+            easy: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'],
+            medium: ['CAT', 'DOG', 'SUN', 'MOON', 'STAR', 'FISH', 'BIRD', 'TREE', 'BOOK', 'GAME', 'CODE', 'LOVE', 'HOPE', 'DREAM', 'MAGIC'],
+            hard: ['COMPUTER', 'PROGRAM', 'BINARY', 'LEARNING', 'ADVENTURE', 'CHALLENGE', 'KNOWLEDGE', 'DISCOVERY', 'UNIVERSE', 'TREASURE']
+        };
+
+        let currentWord = '';
+        let currentBinary = '';
+        let score = 0;
+        let streak = 0;
+        let highScore = localStorage.getItem('binaryGameHighScore') || 0;
+
+        // 初始化
+        document.getElementById('highScore').textContent = highScore;
+
+        // 标签页切换
+        function switchTab(tabId) {
+            const tabs = document.querySelectorAll('.tab');
+            const sections = document.querySelectorAll('.section');
+
+            tabs.forEach(tab => tab.classList.remove('active'));
+            sections.forEach(section => section.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+
+            if (tabId === 'game' && !currentWord) {
+                startNewGame();
+            }
+        }
+
+        // 文字转二进制
+        function convertTextToBinary() {
+            const text = document.getElementById('textInput').value;
+            let binary = '';
+
+            for (let i = 0; i < text.length; i++) {
+                const charCode = text.charCodeAt(i);
+                const binaryChar = charCode.toString(2).padStart(8, '0');
+                binary += binaryChar + ' ';
+            }
+
+            document.getElementById('binaryOutput').value = binary.trim();
+        }
+
+        // 二进制转文字
+        function convertBinaryToText() {
+            const binary = document.getElementById('binaryInput').value.trim();
+            const binaryArray = binary.split(/\s+/);
+            let text = '';
+
+            for (let binaryChar of binaryArray) {
+                if (binaryChar.length === 8 && /^[01]+$/.test(binaryChar)) {
+                    const charCode = parseInt(binaryChar, 2);
+                    text += String.fromCharCode(charCode);
+                }
+            }
+
+            document.getElementById('textOutput').value = text;
+        }
+
+        // 二进制转黑白图片
+        function convertBinaryToImage() {
+            const binary = document.getElementById('binaryToImageInput').value.trim();
+            const binaryArray = binary.split(/\s+/).filter(b => b.length === 8 && /^[01]+$/.test(b));
+            const grid = document.getElementById('binaryImageGrid');
+
+            if (binaryArray.length === 0) {
+                grid.innerHTML = '<p style="color: #999;">请输入有效的8位二进制数字</p>';
+                return;
+            }
+
+            grid.innerHTML = '';
+            grid.style.gridTemplateColumns = `repeat(8, 30px)`;
+
+            binaryArray.forEach(binaryChar => {
+                for (let bit of binaryChar) {
+                    const cell = document.createElement('div');
+                    cell.className = 'binary-cell ' + (bit === '0' ? 'black' : 'white');
+                    grid.appendChild(cell);
+                }
+            });
+        }
+
+        // 文字转黑白图片
+        function convertTextToImage() {
+            const text = document.getElementById('textToImageInput').value;
+            const grid = document.getElementById('textImageGrid');
+
+            if (!text) {
+                grid.innerHTML = '';
+                return;
+            }
+
+            grid.innerHTML = '';
+            grid.style.gridTemplateColumns = `repeat(8, 30px)`;
+
+            for (let char of text) {
+                const charCode = char.charCodeAt(0);
+                const binaryChar = charCode.toString(2).padStart(8, '0');
+
+                for (let bit of binaryChar) {
+                    const cell = document.createElement('div');
+                    cell.className = 'binary-cell ' + (bit === '0' ? 'black' : 'white');
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        // 开始新游戏
+        function startNewGame() {
+            const difficulty = document.getElementById('difficulty').value;
+            const words = wordDatabase[difficulty];
+            currentWord = words[Math.floor(Math.random() * words.length)];
+
+            // 转换为二进制
+            currentBinary = '';
+            for (let char of currentWord) {
+                currentBinary += char.charCodeAt(0).toString(2).padStart(8, '0');
+            }
+
+            // 创建游戏格子
+            const grid = document.getElementById('gameGrid');
+            grid.innerHTML = '';
+            grid.style.gridTemplateColumns = `repeat(8, 35px)`;
+
+            for (let bit of currentBinary) {
+                const cell = document.createElement('div');
+                cell.className = 'game-cell ' + (bit === '0' ? 'black' : 'white');
+                grid.appendChild(cell);
+            }
+
+            // 清空输入和提示
+            document.getElementById('gameAnswer').value = '';
+            document.getElementById('hintBox').classList.remove('show');
+            document.getElementById('resultMessage').className = 'result-message';
+            document.getElementById('resultMessage').style.display = 'none';
+        }
+
+        // 显示提示
+        function showHint() {
+            const hintBox = document.getElementById('hintBox');
+            const hints = [
+                `这个单词有 ${currentWord.length} 个字母`,
+                `第一个字母是 '${currentWord[0]}'`,
+                `单词的二进制长度是 ${currentBinary.length} 位`
+            ];
+            const randomHint = hints[Math.floor(Math.random() * hints.length)];
+            hintBox.textContent = '💡 ' + randomHint;
+            hintBox.classList.add('show');
+        }
+
+        // 检查答案
+        function checkAnswer() {
+            const answer = document.getElementById('gameAnswer').value.toUpperCase().trim();
+            const resultMessage = document.getElementById('resultMessage');
+
+            if (answer === currentWord) {
+                // 正确
+                score += 10 + (streak * 2);
+                streak++;
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('binaryGameHighScore', highScore);
+                }
+
+                resultMessage.textContent = '🎉 正确！太棒了！+ ' + (10 + ((streak - 1) * 2)) + ' 分';
+                resultMessage.className = 'result-message success';
+
+                document.getElementById('score').textContent = score;
+                document.getElementById('streak').textContent = streak;
+                document.getElementById('highScore').textContent = highScore;
+
+                // 2秒后开始新题目
+                setTimeout(() => {
+                    startNewGame();
+                }, 2000);
+            } else {
+                // 错误
+                streak = 0;
+                resultMessage.textContent = '❌ 不对哦，再试试看！提示：这是一个 ' + currentWord.length + ' 个字母的单词';
+                resultMessage.className = 'result-message error';
+                document.getElementById('streak').textContent = streak;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一笔画挑战 - 欧拉路径游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1400px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .intro {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        .intro h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .intro p {
+            color: #555;
+            line-height: 1.8;
+            margin: 8px 0;
+        }
+
+        .game-section {
+            display: none;
+        }
+
+        .game-section.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .level-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .level-btn {
+            background: white;
+            border: 3px solid #667eea;
+            padding: 30px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .level-btn:hover {
+            background: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .level-btn h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.5em;
+        }
+
+        .level-btn:hover h3 {
+            color: white;
+        }
+
+        .level-btn p {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .level-btn:hover p {
+            color: white;
+        }
+
+        .canvas-container {
+            background: #f9f9f9;
+            border: 3px solid #667eea;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        canvas {
+            background: white;
+            border-radius: 10px;
+            cursor: crosshair;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+        }
+
+        .stat-box .number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-box .label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .message {
+            text-align: center;
+            font-size: 1.3em;
+            color: #764ba2;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 10px;
+        }
+
+        .result {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            margin: 20px 0;
+            color: white;
+        }
+
+        .result h2 {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .explanation {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .explanation h3 {
+            color: #1565c0;
+            margin-bottom: 10px;
+        }
+
+        .explanation p {
+            color: #424242;
+            line-height: 1.6;
+            margin: 8px 0;
+        }
+
+        .node-info {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #ffc107;
+        }
+
+        .node-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .node-item {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #ddd;
+        }
+
+        .node-item .node-id {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .node-item .odd-count {
+            color: #f44336;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .node-item .even-count {
+            color: #4caf50;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✏️ 一笔画挑战 - 欧拉路径游戏</h1>
+
+        <!-- 开始界面 -->
+        <div id="startScreen" class="game-section active">
+            <div class="intro">
+                <h3>🎮 游戏规则</h3>
+                <p><strong>目标：</strong>用连续的一笔，不重复地画出所有线条！</p>
+                <p><strong>规则：</strong></p>
+                <p>1️⃣ 从任意节点开始</p>
+                <p>2️⃣ 沿着线条移动，不能跳过线条</p>
+                <p>3️⃣ 每条线只能画一次，不能重复</p>
+                <p>4️⃣ 画完所有线就成功！</p>
+            </div>
+
+            <div class="intro">
+                <h3>💡 欧拉路径的秘密</h3>
+                <p><strong>什么是一笔画（欧拉路径）？</strong></p>
+                <p>• 一笔画的数学名称叫"欧拉路径"</p>
+                <p>• 欧拉路径要求：除了起点和终点，所有节点的连接数必须是偶数</p>
+                <p>• 奇数节点（连接数是奇数）最多只能有2个</p>
+                <p>• 这两个奇数节点就是起点和终点！</p>
+            </div>
+
+            <p style="text-align: center; font-size: 1.2em; color: #667eea; font-weight: bold; margin: 20px 0;">
+                选择关卡：
+            </p>
+
+            <div class="level-selector">
+                <div class="level-btn" onclick="startGame(1)">
+                    <h3>😊 简单</h3>
+                    <p>3-4个节点</p>
+                    <p><small>多种图形随机出现</small></p>
+                </div>
+
+                <div class="level-btn" onclick="startGame(2)">
+                    <h3>🤔 中等</h3>
+                    <p>5-6个节点</p>
+                    <p><small>多种图形随机出现</small></p>
+                </div>
+
+                <div class="level-btn" onclick="startGame(3)">
+                    <h3>😰 困难</h3>
+                    <p>7-8个节点</p>
+                    <p><small>多种图形随机出现</small></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 游戏界面 -->
+        <div id="gameScreen" class="game-section">
+            <div class="message" id="messageDisplay">
+                从任意节点开始，点击并拖动鼠标画线！
+            </div>
+
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="number" id="edgesDrawn">0</div>
+                    <div class="label">已画线数</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="totalEdges">0</div>
+                    <div class="label">总线条数</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="oddNodes">0</div>
+                    <div class="label">奇数节点</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="isPossible">?</div>
+                    <div class="label">能否一笔画</div>
+                </div>
+            </div>
+
+            <div class="node-info">
+                <h4>📊 节点信息：</h4>
+                <p id="nodeInfoText">查看每个节点的连接数（奇数节点最多2个才能一笔画完成）</p>
+                <div class="node-list" id="nodeList"></div>
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="gameCanvas" width="800" height="600"></canvas>
+            </div>
+
+            <div class="controls">
+                <button onclick="resetGame()">重新开始 🔄</button>
+                <button onclick="showHint()">显示提示 💡</button>
+                <button onclick="backToMenu()">返回菜单 🏠</button>
+            </div>
+        </div>
+
+        <!-- 结果界面 -->
+        <div id="resultScreen" class="game-section">
+            <div class="result" id="resultMessage">
+                <h2>🎉 恭喜完成！</h2>
+                <p>你成功地一笔画出了整个图形！</p>
+            </div>
+
+            <div class="explanation">
+                <h3>🔍 欧拉路径原理</h3>
+                <p><strong>为什么这个图形可以一笔画出？</strong></p>
+                <p>• 欧拉路径定理：一个图形能一笔画出，当且仅当奇数节点的数量是0或2</p>
+                <p>• 奇数节点 = 连接该节点的线条数是奇数</p>
+                <p>• 如果有2个奇数节点，必须从一个奇数节点开始，到另一个奇数节点结束</p>
+                <p>• 如果有0个奇数节点，可以从任意节点开始，最后回到起点</p>
+
+                <hr style="margin: 15px 0; border: none; border-top: 2px solid #ddd;">
+
+                <p><strong>📚 历史背景：</strong></p>
+                <p>• 这个问题由数学家欧拉（Leonhard Euler）在1736年提出</p>
+                <p>• 他解决了著名的"哥尼斯堡七桥问题"</p>
+                <p>• 这开创了图论这一数学分支</p>
+                <p>• 欧拉路径在电路设计、网络路由等领域有广泛应用</p>
+            </div>
+
+            <div class="controls">
+                <button onclick="resetGame()">再玩一次 🔄</button>
+                <button onclick="backToMenu()">返回菜单 🏠</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态
+        let nodes = [];
+        let edges = [];
+        let drawnEdges = [];
+        let currentLevel = 1;
+        let isDrawing = false;
+        let currentNode = null;
+        let canvas, ctx;
+        let path = [];
+
+        // 图形定义（每个难度等级有多个备选图案）
+        const graphSets = {
+            1: [ // 简单：3-4个节点的图形
+                {
+                    name: '经典三角形',
+                    nodes: [
+                        { id: 'A', x: 400, y: 150 },
+                        { id: 'B', x: 250, y: 450 },
+                        { id: 'C', x: 550, y: 450 }
+                    ],
+                    edges: [
+                        { from: 'A', to: 'B' },
+                        { from: 'B', to: 'C' },
+                        { from: 'C', to: 'A' }
+                    ]
+                },
+                {
+                    name: '四边形',
+                    nodes: [
+                        { id: 'A', x: 300, y: 150 },
+                        { id: 'B', x: 500, y: 150 },
+                        { id: 'C', x: 500, y: 450 },
+                        { id: 'D', x: 300, y: 450 }
+                    ],
+                    edges: [
+                        { from: 'A', to: 'B' },
+                        { from: 'B', to: 'C' },
+                        { from: 'C', to: 'D' },
+                        { from: 'D', to: 'A' },
+                        { from: 'A', to: 'C' }
+                    ]
+                },
+                {
+                    name: '风筝形',
+                    nodes: [
+                        { id: 'A', x: 400, y: 100 },
+                        { id: 'B', x: 250, y: 300 },
+                        { id: 'C', x: 400, y: 500 },
+                        { id: 'D', x: 550, y: 300 }
+                    ],
+                    edges: [
+                        { from: 'A', to: 'B' },
+                        { from: 'B', to: 'C' },
+                        { from: 'C', to: 'D' },
+                        { from: 'D', to: 'A' },
+                        { from: 'B', to: 'D' }
+                    ]
+                }
+            ],
+            2: [ // 中等：5-6个节点的图形
+                {
+                    name: '五角星',
+                    nodes: [
+                        { id: 'A', x: 400, y: 100 },
+                        { id: 'B', x: 590, y: 280 },
+                        { id: 'C', x: 520, y: 500 },
+                        { id: 'D', x: 280, y: 500 },
+                        { id: 'E', x: 210, y: 280 }
+                    ],
+                    edges: [
+                        { from: 'A', to: 'C' },
+                        { from: 'A', to: 'D' },
+                        { from: 'B', to: 'D' },
+                        { from: 'B', to: 'E' },
+                        { from: 'C', to: 'E' }
+                    ]
+                },
+                {
+                    name: '房子形',
+                    nodes: [
+                        { id: 'A', x: 400, y: 100 },
+                        { id: 'B', x: 250, y: 250 },
+                        { id: 'C', x: 550, y: 250 },
+                        { id: 'D', x: 250, y: 500 },
+                        { id: 'E', x: 550, y: 500 }
+                    ],
+                    edges: [
+                        { from: 'A', to: 'B' },
+                        { from: 'A', to: 'C' },
+                        { from: 'B', to: 'C' },
+                        { from: 'B', to: 'D' },
+                        { from: 'C', to: 'E' },
+                        { from: 'D', to: 'E' }
+                    ]
+                },
+                {
+                    name: '六边形星',
+                    nodes: [
+                        { id: 'A', x: 400, y: 100 },
+                        { id: 'B', x: 550, y: 200 },
+                        { id: 'C', x: 550, y: 400 },
+                        { id: 'D', x: 400, y: 500 },
+                        { id: 'E', x: 250, y: 400 },
+                        { id: 'F', x: 250, y: 200 }
+                    ],
+                    edges: [
+                        { from: 'A', to: 'C' },
+                        { from: 'A', to: 'D' },
+                        { from: 'A', to: 'E' },
+                        { from: 'B', to: 'D' },
+                        { from: 'B', to: 'E' },
+                        { from: 'B', to: 'F' },
+                        { from: 'C', to: 'E' },
+                        { from: 'C', to: 'F' },
+                        { from: 'D', to: 'F' }
+                    ]
+                }
+            ],
+            3: [ // 困难：7-8个节点的图形
+                {
+                    name: '双三角连接',
+                    nodes: [
+                        { id: 'A', x: 200, y: 150 },
+                        { id: 'B', x: 400, y: 150 },
+                        { id: 'C', x: 300, y: 300 },
+                        { id: 'D', x: 300, y: 450 },
+                        { id: 'E', x: 200, y: 550 },
+                        { id: 'F', x: 400, y: 550 },
+                        { id: 'G', x: 600, y: 300 },
+                        { id: 'H', x: 500, y: 450 }
+                    ],
+                    edges: [
+                        { from: 'A', to: 'B' },
+                        { from: 'A', to: 'C' },
+                        { from: 'B', to: 'C' },
+                        { from: 'C', to: 'D' },
+                        { from: 'D', to: 'E' },
+                        { from: 'D', to: 'F' },
+                        { from: 'E', to: 'F' },
+                        { from: 'C', to: 'G' },
+                        { from: 'D', to: 'G' },
+                        { from: 'G', to: 'H' }
+                    ]
+                },
+                {
+                    name: '八爪鱼形',
+                    nodes: [
+                        { id: 'A', x: 400, y: 300 },
+                        { id: 'B', x: 400, y: 100 },
+                        { id: 'C', x: 550, y: 150 },
+                        { id: 'D', x: 600, y: 300 },
+                        { id: 'E', x: 550, y: 450 },
+                        { id: 'F', x: 400, y: 500 },
+                        { id: 'G', x: 250, y: 450 },
+                        { id: 'H', x: 200, y: 300 }
+                    ],
+                    edges: [
+                        { from: 'A', to: 'B' },
+                        { from: 'A', to: 'C' },
+                        { from: 'A', to: 'D' },
+                        { from: 'A', to: 'E' },
+                        { from: 'A', to: 'F' },
+                        { from: 'A', to: 'G' },
+                        { from: 'A', to: 'H' },
+                        { from: 'B', to: 'C' },
+                        { from: 'C', to: 'D' },
+                        { from: 'D', to: 'E' },
+                        { from: 'E', to: 'F' },
+                        { from: 'F', to: 'G' },
+                        { from: 'G', to: 'H' },
+                        { from: 'H', to: 'B' }
+                    ]
+                },
+                {
+                    name: '复杂网格',
+                    nodes: [
+                        { id: 'A', x: 200, y: 150 },
+                        { id: 'B', x: 400, y: 150 },
+                        { id: 'C', x: 600, y: 150 },
+                        { id: 'D', x: 200, y: 350 },
+                        { id: 'E', x: 400, y: 350 },
+                        { id: 'F', x: 600, y: 350 },
+                        { id: 'G', x: 300, y: 500 },
+                        { id: 'H', x: 500, y: 500 }
+                    ],
+                    edges: [
+                        { from: 'A', to: 'B' },
+                        { from: 'B', to: 'C' },
+                        { from: 'A', to: 'D' },
+                        { from: 'B', to: 'E' },
+                        { from: 'C', to: 'F' },
+                        { from: 'D', to: 'E' },
+                        { from: 'E', to: 'F' },
+                        { from: 'D', to: 'G' },
+                        { from: 'E', to: 'G' },
+                        { from: 'E', to: 'H' },
+                        { from: 'F', to: 'H' },
+                        { from: 'G', to: 'H' }
+                    ]
+                }
+            ]
+        };
+
+        // 当前图形名称
+        let currentGraphName = '';
+
+        // 开始游戏
+        function startGame(level) {
+            currentLevel = level;
+
+            // 从该难度的多个图形中随机选择一个
+            const graphSet = graphSets[level];
+            const randomIndex = Math.floor(Math.random() * graphSet.length);
+            const graph = graphSet[randomIndex];
+            currentGraphName = graph.name;
+
+            // 复制节点和边
+            nodes = JSON.parse(JSON.stringify(graph.nodes));
+            edges = JSON.parse(JSON.stringify(graph.edges));
+            drawnEdges = [];
+            path = [];
+            currentNode = null;
+            isDrawing = false;
+
+            showScreen('gameScreen');
+            initCanvas();
+            updateStats();
+            updateNodeInfo();
+            updateMessage(`当前图形：${currentGraphName} - 从任意节点开始，点击并拖动鼠标画线！`);
+        }
+
+        // 初始化画布
+        function initCanvas() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+
+            // 清除画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 绑定事件
+            canvas.onmousedown = handleMouseDown;
+            canvas.onmousemove = handleMouseMove;
+            canvas.onmouseup = handleMouseUp;
+            canvas.onmouseleave = handleMouseUp;
+
+            // 触摸事件支持
+            canvas.ontouchstart = handleTouchStart;
+            canvas.ontouchmove = handleTouchMove;
+            canvas.ontouchend = handleTouchEnd;
+
+            drawGame();
+        }
+
+        // 绘制游戏
+        function drawGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 绘制所有边（未画的边用灰色）
+            edges.forEach((edge, index) => {
+                const fromNode = nodes.find(n => n.id === edge.from);
+                const toNode = nodes.find(n => n.id === edge.to);
+                const isDrawn = drawnEdges.includes(index);
+
+                ctx.beginPath();
+                ctx.moveTo(fromNode.x, fromNode.y);
+                ctx.lineTo(toNode.x, toNode.y);
+                ctx.strokeStyle = isDrawn ? '#667eea' : '#ddd';
+                ctx.lineWidth = isDrawn ? 3 : 2;
+                ctx.stroke();
+
+                // 绘制箭头（如果已画）
+                if (isDrawn) {
+                    drawArrow(fromNode.x, fromNode.y, toNode.x, toNode.y);
+                }
+            });
+
+            // 绘制当前路径
+            if (path.length > 1) {
+                ctx.beginPath();
+                ctx.moveTo(path[0].x, path[0].y);
+                for (let i = 1; i < path.length; i++) {
+                    ctx.lineTo(path[i].x, path[i].y);
+                }
+                ctx.strokeStyle = '#ff9800';
+                ctx.lineWidth = 4;
+                ctx.stroke();
+            }
+
+            // 绘制节点
+            nodes.forEach(node => {
+                // 计算该节点的连接数
+                const connectionCount = getNodeConnectionCount(node.id);
+                const isOdd = connectionCount % 2 !== 0;
+
+                // 绘制节点圆形
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 25, 0, Math.PI * 2);
+                ctx.fillStyle = currentNode && currentNode.id === node.id ? '#ff9800' :
+                              isOdd ? '#ffccbc' : '#bbdefb';
+                ctx.fill();
+                ctx.strokeStyle = isOdd ? '#f44336' : '#667eea';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                // 绘制节点标签
+                ctx.fillStyle = '#333';
+                ctx.font = 'bold 18px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(node.id, node.x, node.y);
+
+                // 显示连接数
+                ctx.fillStyle = isOdd ? '#f44336' : '#4caf50';
+                ctx.font = '12px Arial';
+                ctx.fillText(`${connectionCount}条线`, node.x, node.y + 40);
+            });
+        }
+
+        // 绘制箭头
+        function drawArrow(x1, y1, x2, y2) {
+            const angle = Math.atan2(y2 - y1, x2 - x1);
+            const midX = (x1 + x2) / 2;
+            const midY = (y1 + y2) / 2;
+
+            ctx.save();
+            ctx.translate(midX, midY);
+            ctx.rotate(angle);
+
+            ctx.beginPath();
+            ctx.moveTo(-10, -5);
+            ctx.lineTo(0, 0);
+            ctx.lineTo(-10, 5);
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        // 获取节点的连接数
+        function getNodeConnectionCount(nodeId) {
+            let count = 0;
+            edges.forEach(edge => {
+                if (edge.from === nodeId || edge.to === nodeId) {
+                    count++;
+                }
+            });
+            return count;
+        }
+
+        // 处理鼠标按下
+        function handleMouseDown(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // 检查是否点击了节点
+            const clickedNode = nodes.find(node => {
+                const dist = Math.sqrt((x - node.x) ** 2 + (y - node.y) ** 2);
+                return dist < 30;
+            });
+
+            if (clickedNode) {
+                isDrawing = true;
+                currentNode = clickedNode;
+                path = [{ x: clickedNode.x, y: clickedNode.y }];
+                drawGame();
+            }
+        }
+
+        // 处理鼠标移动
+        function handleMouseMove(e) {
+            if (!isDrawing || !currentNode) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // 检查是否移动到另一个节点
+            const targetNode = nodes.find(node => {
+                const dist = Math.sqrt((x - node.x) ** 2 + (y - node.y) ** 2);
+                return dist < 30 && node.id !== currentNode.id;
+            });
+
+            if (targetNode) {
+                // 检查这条边是否已画过
+                const edgeIndex = edges.findIndex(edge =>
+                    (edge.from === currentNode.id && edge.to === targetNode.id) ||
+                    (edge.from === targetNode.id && edge.to === currentNode.id)
+                );
+
+                if (edgeIndex !== -1 && !drawnEdges.includes(edgeIndex)) {
+                    // 画这条边
+                    drawnEdges.push(edgeIndex);
+                    path.push({ x: targetNode.x, y: targetNode.y });
+                    currentNode = targetNode;
+
+                    drawGame();
+                    updateStats();
+
+                    // 检查是否完成
+                    if (drawnEdges.length === edges.length) {
+                        setTimeout(() => showResult(true), 500);
+                    }
+                }
+            }
+        }
+
+        // 处理鼠标释放
+        function handleMouseUp() {
+            if (isDrawing) {
+                isDrawing = false;
+                path = [];
+                currentNode = null;
+                drawGame();
+            }
+        }
+
+        // 触摸事件处理
+        function handleTouchStart(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            handleMouseDown({ clientX: touch.clientX, clientY: touch.clientY });
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
+        }
+
+        function handleTouchEnd(e) {
+            e.preventDefault();
+            handleMouseUp();
+        }
+
+        // 更新统计
+        function updateStats() {
+            document.getElementById('edgesDrawn').textContent = drawnEdges.length;
+            document.getElementById('totalEdges').textContent = edges.length;
+
+            // 计算奇数节点数量
+            let oddCount = 0;
+            nodes.forEach(node => {
+                if (getNodeConnectionCount(node.id) % 2 !== 0) {
+                    oddCount++;
+                }
+            });
+            document.getElementById('oddNodes').textContent = oddCount;
+
+            // 判断能否一笔画
+            const isPossible = oddCount === 0 || oddCount === 2;
+            document.getElementById('isPossible').textContent = isPossible ? '✅ 可以' : '❌ 不能';
+        }
+
+        // 更新节点信息
+        function updateNodeInfo() {
+            const nodeList = document.getElementById('nodeList');
+            nodeList.innerHTML = '';
+
+            nodes.forEach(node => {
+                const count = getNodeConnectionCount(node.id);
+                const isOdd = count % 2 !== 0;
+
+                const item = document.createElement('div');
+                item.className = 'node-item';
+                item.innerHTML = `
+                    <div class="node-id">节点 ${node.id}</div>
+                    <div class="${isOdd ? 'odd-count' : 'even-count'}">
+                        ${count}条线 ${isOdd ? '(奇数)' : '(偶数)'}
+                    </div>
+                `;
+                nodeList.appendChild(item);
+            });
+        }
+
+        // 更新消息
+        function updateMessage(text) {
+            document.getElementById('messageDisplay').textContent = text;
+        }
+
+        // 显示提示
+        function showHint() {
+            let oddNodes = [];
+            nodes.forEach(node => {
+                if (getNodeConnectionCount(node.id) % 2 !== 0) {
+                    oddNodes.push(node.id);
+                }
+            });
+
+            if (oddNodes.length === 0) {
+                updateMessage('💡 提示：所有节点连接数都是偶数，可以从任意节点开始，最后回到起点！');
+            } else if (oddNodes.length === 2) {
+                updateMessage(`💡 提示：节点 ${oddNodes[0]} 和 ${oddNodes[1]} 是奇数节点，必须从其中一个开始，到另一个结束！`);
+            } else {
+                updateMessage(`⚠️ 这个图形有 ${oddNodes.length} 个奇数节点，无法一笔画出！`);
+            }
+        }
+
+        // 显示结果
+        function showResult(success) {
+            showScreen('resultScreen');
+
+            const resultDiv = document.getElementById('resultMessage');
+            if (success) {
+                resultDiv.innerHTML = `
+                    <h2>🎉 太棒了！</h2>
+                    <p>你成功完成了"${currentGraphName}"图形！</p>
+                    <p>所有 ${edges.length} 条线都画完了</p>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <h2>😊 继续努力！</h2>
+                    <p>在"${currentGraphName}"图形中</p>
+                    <p>你已经画了 ${drawnEdges.length} 条线</p>
+                    <p>还差 ${edges.length - drawnEdges.length} 条线</p>
+                `;
+            }
+        }
+
+        // 重置游戏
+        function resetGame() {
+            startGame(currentLevel);
+        }
+
+        // 返回菜单
+        function backToMenu() {
+            showScreen('startScreen');
+        }
+
+        // 显示指定屏幕
+        function showScreen(screenId) {
+            document.querySelectorAll('.game-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>像素格互动游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            padding: 10px 25px;
+            font-size: 14px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .mode-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .instructions {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .pattern-selector {
+            display: none;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .pattern-selector.show {
+            display: flex;
+        }
+
+        .pattern-btn {
+            padding: 8px 16px;
+            font-size: 13px;
+            border: 2px solid #764ba2;
+            background: white;
+            color: #764ba2;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .pattern-btn:hover {
+            background: #764ba2;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .grid-size-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .size-btn {
+            padding: 8px 20px;
+            font-size: 13px;
+            border: 2px solid #333;
+            background: white;
+            color: #333;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .size-btn.active {
+            background: #333;
+            color: white;
+        }
+
+        .size-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .grid-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .grid {
+            display: grid;
+            gap: 2px;
+            background: #ddd;
+            padding: 2px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .cell {
+            background: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: #999;
+        }
+
+        .cell:hover {
+            background: #e0e0e0;
+        }
+
+        .cell.active {
+            background: #000;
+        }
+
+        .cell.active:hover {
+            background: #333;
+        }
+
+        .cell.challenge-mode {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .cell.challenge-mode.active {
+            color: transparent;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        button.control-btn {
+            padding: 12px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .reset {
+            background: #667eea;
+            color: white;
+        }
+
+        .reset:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .check {
+            background: #10b981;
+            color: white;
+            display: none;
+        }
+
+        .check.show {
+            display: block;
+        }
+
+        .check:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .hint {
+            background: #f59e0b;
+            color: white;
+            display: none;
+        }
+
+        .hint.show {
+            display: block;
+        }
+
+        .hint:hover {
+            background: #d97706;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4);
+        }
+
+        .success-message {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: #10b981;
+            color: white;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            animation: slideIn 0.5s ease;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+
+            .cell {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 像素格互动游戏</h1>
+
+        <div class="mode-selector">
+            <button class="mode-btn active" onclick="setMode('free')">自由创作</button>
+            <button class="mode-btn" onclick="setMode('challenge')">挑战模式</button>
+        </div>
+
+        <div class="grid-size-selector">
+            <button class="size-btn active" onclick="setGridSize(8)">8×8</button>
+            <button class="size-btn" onclick="setGridSize(9)">9×9</button>
+            <button class="size-btn" onclick="setGridSize(15)">15×15</button>
+        </div>
+
+        <div class="pattern-selector" id="patternSelector">
+            <button class="pattern-btn" onclick="loadPattern('smile')">😊 笑脸</button>
+            <button class="pattern-btn" onclick="loadPattern('heart')">❤️ 心形</button>
+            <button class="pattern-btn" onclick="loadPattern('sad')">😢 哭脸</button>
+            <button class="pattern-btn" onclick="loadPattern('house')">🏠 小房子</button>
+            <button class="pattern-btn" onclick="loadPattern('star')">⭐ 星星</button>
+            <button class="pattern-btn" onclick="loadPattern('flower')">🌸 花朵</button>
+            <button class="pattern-btn" onclick="loadPattern('tree')">🌲 树木</button>
+            <button class="pattern-btn" onclick="loadPattern('fish')">🐟 小鱼</button>
+        </div>
+
+        <p class="instructions" id="instructions">点击格子来切换颜色，创建你的像素画！</p>
+
+        <div class="grid-container">
+            <div class="grid" id="grid"></div>
+        </div>
+
+        <div class="success-message" id="successMessage">
+            🎉 恭喜你！挑战成功！
+        </div>
+
+        <div class="controls">
+            <button class="control-btn reset" onclick="resetGrid()">🔄 重置画布</button>
+            <button class="control-btn hint" id="hintBtn" onclick="showHint()">💡 提示</button>
+            <button class="control-btn check" id="checkBtn" onclick="checkAnswer()">✅ 检查答案</button>
+        </div>
+    </div>
+
+    <script>
+        const grid = document.getElementById('grid');
+        const patternSelector = document.getElementById('patternSelector');
+        const instructions = document.getElementById('instructions');
+        const hintBtn = document.getElementById('hintBtn');
+        const checkBtn = document.getElementById('checkBtn');
+        const successMessage = document.getElementById('successMessage');
+
+        let gridSize = 8;
+        let mode = 'free';
+        let cells = [];
+        let currentPattern = null;
+        let hintShown = false;
+
+        // 图案数据 (0=黑色/需要填充, 1=白色/不需要填充)
+        const patterns = {
+            smile: {
+                size: 8,
+                data: [
+                    [1,1,1,1,1,1,1,1],
+                    [1,0,1,1,1,1,0,1],
+                    [1,1,0,0,0,0,1,1],
+                    [1,1,0,0,0,0,1,1],
+                    [1,0,1,0,0,1,0,1],
+                    [1,1,0,1,1,0,1,1],
+                    [1,1,1,0,0,1,1,1],
+                    [1,1,1,1,1,1,1,1]
+                ]
+            },
+            heart: {
+                size: 9,
+                data: [
+                    [1,1,1,1,1,1,1,1,1],
+                    [1,0,0,1,1,1,0,0,1],
+                    [0,0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0,0],
+                    [1,0,0,0,0,0,0,0,1],
+                    [1,1,0,0,0,0,0,1,1],
+                    [1,1,1,0,0,0,1,1,1],
+                    [1,1,1,1,1,1,1,1,1],
+                    [1,1,1,1,1,1,1,1,1]
+                ]
+            },
+            sad: {
+                size: 8,
+                data: [
+                    [1,1,1,1,1,1,1,1],
+                    [1,1,0,0,0,0,1,1],
+                    [1,0,0,0,0,0,0,1],
+                    [1,0,1,0,0,1,0,1],
+                    [1,1,0,1,1,0,1,1],
+                    [1,1,1,0,0,1,1,1],
+                    [1,1,0,1,1,0,1,1],
+                    [1,1,1,1,1,1,1,1]
+                ]
+            },
+            house: {
+                size: 9,
+                data: [
+                    [1,1,1,1,1,1,1,1,1],
+                    [1,1,1,1,1,1,1,1,1],
+                    [1,1,0,0,1,0,0,1,1],
+                    [1,0,0,0,1,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,1],
+                    [1,0,1,1,0,1,1,0,1],
+                    [1,0,1,1,0,1,1,0,1],
+                    [1,0,0,0,0,0,0,0,1],
+                    [1,1,1,1,1,1,1,1,1]
+                ]
+            },
+            star: {
+                size: 15,
+                data: [
+                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                    [1,1,1,1,1,1,1,0,1,1,1,1,1,1,1],
+                    [1,1,1,1,1,1,0,0,0,1,1,1,1,1,1],
+                    [1,1,1,1,1,0,0,0,0,0,1,1,1,1,1],
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    [1,1,1,1,0,0,0,0,0,0,0,1,1,1,1],
+                    [1,1,1,0,0,0,1,0,1,0,0,0,1,1,1],
+                    [1,1,0,0,0,1,0,1,0,1,0,0,0,1,1],
+                    [1,0,0,0,1,0,1,1,1,0,1,0,0,0,1],
+                    [1,0,0,0,1,0,0,1,0,0,1,0,0,0,1],
+                    [1,0,0,1,0,0,0,1,0,0,0,1,0,0,1],
+                    [1,0,0,1,0,0,0,0,0,0,0,1,0,0,1],
+                    [1,0,0,1,0,0,1,1,1,0,0,1,0,0,1],
+                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+                ]
+            },
+            flower: {
+                size: 9,
+                data: [
+                    [1,1,1,1,1,1,1,1,1],
+                    [1,1,0,1,1,1,0,1,1],
+                    [1,0,0,0,1,0,0,0,1],
+                    [1,1,0,1,1,1,0,1,1],
+                    [1,1,1,1,0,1,1,1,1],
+                    [1,1,1,0,0,0,1,1,1],
+                    [1,1,1,1,1,1,1,1,1],
+                    [1,1,1,0,0,0,1,1,1],
+                    [1,1,1,1,1,1,1,1,1]
+                ]
+            },
+            tree: {
+                size: 9,
+                data: [
+                    [1,1,1,1,1,1,1,1,1],
+                    [1,1,1,1,1,1,1,1,1],
+                    [1,1,1,0,0,0,1,1,1],
+                    [1,1,0,1,0,1,0,1,1],
+                    [1,0,1,0,0,0,1,0,1],
+                    [1,1,1,0,0,0,1,1,1],
+                    [1,1,1,1,0,1,1,1,1],
+                    [1,1,0,0,0,0,0,1,1],
+                    [1,1,0,0,0,0,0,1,1]
+                ]
+            },
+            fish: {
+                size: 8,
+                data: [
+                    [1,1,1,1,1,1,1,1],
+                    [1,1,1,1,1,1,1,1],
+                    [1,0,0,1,1,0,0,1],
+                    [0,0,0,1,1,0,0,0],
+                    [0,1,0,1,1,0,1,0],
+                    [0,1,1,1,1,1,1,0],
+                    [0,0,0,1,1,0,0,0],
+                    [1,1,1,1,1,1,1,1]
+                ]
+            }
+        };
+
+        // 创建网格
+        function createGrid() {
+            grid.innerHTML = '';
+            cells = [];
+            successMessage.classList.remove('show');
+
+            const cellSize = gridSize === 15 ? 30 : (gridSize === 9 ? 40 : 50);
+            grid.style.gridTemplateColumns = `repeat(${gridSize}, ${cellSize}px)`;
+
+            for (let i = 0; i < gridSize * gridSize; i++) {
+                const cell = document.createElement('button');
+                cell.className = 'cell';
+                cell.style.width = cellSize + 'px';
+                cell.style.height = cellSize + 'px';
+
+                if (mode === 'challenge' && currentPattern) {
+                    cell.classList.add('challenge-mode');
+                    const row = Math.floor(i / gridSize);
+                    const col = i % gridSize;
+                    if (currentPattern.data[row] && currentPattern.data[row][col] !== undefined) {
+                        cell.textContent = currentPattern.data[row][col];
+                    }
+                }
+
+                cell.addEventListener('click', () => toggleCell(cell));
+                grid.appendChild(cell);
+                cells.push(cell);
+            }
+        }
+
+        // 切换单元格状态
+        function toggleCell(cell) {
+            cell.classList.toggle('active');
+            successMessage.classList.remove('show');
+        }
+
+        // 重置网格
+        function resetGrid() {
+            cells.forEach(cell => {
+                cell.classList.remove('active');
+            });
+            successMessage.classList.remove('show');
+            hintShown = false;
+
+            if (mode === 'challenge' && currentPattern) {
+                cells.forEach((cell, i) => {
+                    const row = Math.floor(i / gridSize);
+                    const col = i % gridSize;
+                    if (currentPattern.data[row] && currentPattern.data[row][col] !== undefined) {
+                        cell.textContent = currentPattern.data[row][col];
+                    }
+                });
+            }
+        }
+
+        // 设置模式
+        function setMode(newMode) {
+            mode = newMode;
+            currentPattern = null;
+            hintShown = false;
+
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (mode === 'challenge') {
+                patternSelector.classList.add('show');
+                instructions.textContent = '选择一个图案，根据格子中的0和1来填充颜色（0=黑色填充，1=白色不填充）！';
+                hintBtn.classList.add('show');
+                checkBtn.classList.add('show');
+            } else {
+                patternSelector.classList.remove('show');
+                instructions.textContent = '点击格子来切换颜色，创建你的像素画！';
+                hintBtn.classList.remove('show');
+                checkBtn.classList.remove('show');
+            }
+
+            createGrid();
+        }
+
+        // 设置网格大小
+        function setGridSize(size) {
+            gridSize = size;
+            currentPattern = null;
+            hintShown = false;
+
+            document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            createGrid();
+        }
+
+        // 加载图案
+        function loadPattern(patternName) {
+            currentPattern = patterns[patternName];
+            hintShown = false;
+            successMessage.classList.remove('show');
+
+            if (currentPattern.size !== gridSize) {
+                setGridSize(currentPattern.size);
+                document.querySelectorAll('.size-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (parseInt(btn.textContent) === currentPattern.size) {
+                        btn.classList.add('active');
+                    }
+                });
+            }
+
+            createGrid();
+        }
+
+        // 显示提示
+        function showHint() {
+            if (!currentPattern || mode !== 'challenge') return;
+
+            hintShown = !hintShown;
+
+            cells.forEach((cell, i) => {
+                const row = Math.floor(i / gridSize);
+                const col = i % gridSize;
+
+                if (currentPattern.data[row] && currentPattern.data[row][col] !== undefined) {
+                    if (hintShown) {
+                        cell.style.backgroundColor = currentPattern.data[row][col] === 0 ? '#333' : '#fff';
+                        cell.style.color = hintShown ? 'transparent' : '#666';
+                    } else {
+                        cell.style.backgroundColor = '';
+                        cell.style.color = '#666';
+                        if (cell.classList.contains('active')) {
+                            cell.style.backgroundColor = '#000';
+                            cell.style.color = 'transparent';
+                        }
+                    }
+                }
+            });
+        }
+
+        // 检查答案
+        function checkAnswer() {
+            if (!currentPattern || mode !== 'challenge') return;
+
+            let correct = true;
+
+            cells.forEach((cell, i) => {
+                const row = Math.floor(i / gridSize);
+                const col = i % gridSize;
+                const shouldBeActive = currentPattern.data[row] && currentPattern.data[row][col] === 0;
+                const isActive = cell.classList.contains('active');
+
+                if (shouldBeActive !== isActive) {
+                    correct = false;
+                }
+            });
+
+            if (correct) {
+                successMessage.classList.add('show');
+            } else {
+                alert('还没完成哦，继续努力！💪');
+            }
+        }
+
+        // 初始化网格
+        createGrid();
+    </script>
+</body>
+</html>
